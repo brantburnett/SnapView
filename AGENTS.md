@@ -96,28 +96,46 @@ powershell -File tools\New-MsixBundle.ps1 ^
 Intermediate files are stored under
 `artifacts\obj\<project>\<configuration>-<architecture>\`. All configuration
 and architecture path components are lowercase. Local package builds are
-unsigned. CI signs the executable, each MSIX, and the final bundle only in the
-`artifact-signing` environment. Before archiving signed MSIX packages, CI
-validates the final archive manifest's resource language and verifies that the
-package identity publisher matches the signing certificate subject.
+unsigned. The release workflow uploads the unsigned MSIX bundle to Microsoft
+Store, which validates and signs it during submission. Unsigned release
+bundles are not published as GitHub release assets.
 
-The `artifact-signing` GitHub environment requires the existing Azure
-federated-credential secrets `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, and
-`AZURE_SUBSCRIPTION_ID`, and the existing
-`AZURE_ARTIFACT_SIGNING_ENDPOINT`,
-`AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME`, and
-`AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME` variables. It additionally
-requires `MSIX_PACKAGE_PUBLISHER`, containing the exact subject distinguished
-name of the Azure Trusted Signing certificate profile. Obtain the exact value
-from a previously signed executable with:
+## Microsoft Store publishing setup
 
-```powershell
-(Get-AuthenticodeSignature .\SnapView.exe).SignerCertificate.Subject
+Tag pushes matching `v*` or `V*` run the `Release` workflow. Its `publish` job
+uses the `publish` GitHub environment and requires the following configuration:
+
+| GitHub location | Name | Value and source |
+| --- | --- | --- |
+| `publish` environment secret | `AZURE_TENANT_ID` | Reuse the existing Microsoft Entra tenant ID. In the Microsoft Entra admin center, open **Identity** > **Overview** and copy **Tenant ID**. |
+| `publish` environment secret | `AZURE_CLIENT_ID` | Reuse the existing application (client) ID for the Entra app registered in Partner Center. In the Entra admin center, open **App registrations**, select the app, and copy **Application (client) ID**. |
+| Repository variable | `MS_STORE_SELLER_ID` | Partner Center **Account settings** > **Organization profile** > **Legal info** > **Seller ID**. |
+| Repository variable | `MS_STORE_PRODUCT_ID` | The SnapView Store product ID from Partner Center. |
+| Repository variable | `MS_STORE_FLIGHT_ID` | The ID of the existing test flight that receives tagged builds. After authenticating the Store CLI, run `msstore flights list <product-id>` to list its IDs. |
+| Repository variable | `MS_STORE_PACKAGE_IDENTITY_NAME` | The package identity name reserved for SnapView in Partner Center, from the product's package identity details. |
+| Repository variable | `MS_STORE_PACKAGE_PUBLISHER` | The publisher distinguished name reserved for SnapView in Partner Center, from the product's package identity details. It must match the publisher in the MSIX manifest submitted to Store. |
+
+Configure a Microsoft Entra federated credential on the existing application
+registration for GitHub Actions. Select **Certificates & secrets** >
+**Federated credentials**, add a GitHub Actions credential, and limit it to:
+
+```text
+Organization: brantburnett
+Repository: SnapView
+Entity type: Environment
+Environment: publish
 ```
 
-The MSIX manifest publisher must exactly match that subject. MSIX provides the
-Start menu entry; it intentionally does not replace the removed WiX desktop or
-startup shortcut selections.
+This produces the required subject
+`repo:brantburnett/SnapView:environment:publish`, allowing only jobs that pass
+the `publish` environment's rules to exchange their short-lived GitHub OIDC
+token. In Partner Center **Account settings** > **User management** >
+**Microsoft Entra applications**, add this same Entra application and assign
+the **Manager** role. The Store product and its target test flight must already
+exist before the first tagged release.
+
+MSIX provides the Start menu entry; it intentionally does not replace the
+removed WiX desktop or startup shortcut selections.
 
 There is no automated test project or test runner in this repository. Validate
 native changes by building the affected configuration, and manually exercise

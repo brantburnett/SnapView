@@ -7,6 +7,9 @@ param(
     [string]$DestinationPath,
 
     [Parameter(Mandatory)]
+    [string]$Name,
+
+    [Parameter(Mandatory)]
     [string]$Publisher,
 
     [Parameter(Mandatory)]
@@ -33,6 +36,7 @@ if ($null -eq $identity) {
     throw "No package identity was found in '$SourcePath'."
 }
 
+$identity.SetAttribute('Name', $Name)
 $identity.SetAttribute('Publisher', $Publisher)
 $identity.SetAttribute('Version', $Version)
 $architecture = $Architecture.ToLowerInvariant()

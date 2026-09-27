@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "CaptureBox.h"
-#include "SnapBox.h"
-#include "SnapBoxBase.h"
+#include "SnapView.h"
+#include "SnapViewBase.h"
 #include "Options.h"
 #include "Share.h"
 #include "SizeMarks.h"
@@ -383,7 +383,7 @@ ATOM RegisterCaptureBoxClass(HINSTANCE hInstance)
     wcex.cbClsExtra		= 0;
     wcex.cbWndExtra		= sizeof(PCAPTUREBOXINFO);
     wcex.hInstance		= hInstance;
-    wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SNAPBOX));
+    wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SNAPVIEW));
     wcex.hCursor		= hCursorMove;
     wcex.lpszClassName	= szCaptureBoxWindowClass;
 
@@ -798,7 +798,7 @@ void GetFileName(LPTSTR szPath, int fileType)
     SYSTEMTIME time;
     GetSystemTime(&time);
     TCHAR szFile[50];
-    _stprintf_s(szFile, 50, _T("\\SnapBox_%04d%02d%02d_%02d%02d%02d"), time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute, time.wSecond);
+    _stprintf_s(szFile, 50, _T("\\SnapView_%04d%02d%02d_%02d%02d%02d"), time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute, time.wSecond);
     _tcscat_s(szPath, MAX_PATH, szFile);
 
     switch (fileType)

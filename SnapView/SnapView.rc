@@ -33,7 +33,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_SNAPBOX             ICON                    "..\\images\\SnapBox.ico"
+IDI_SNAPVIEW             ICON                    "..\\images\\SnapView.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -76,11 +76,11 @@ END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 170, 62
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About SnapBox"
+CAPTION "About SnapView"
 FONT 8, "Tahoma", 0, 0, 0x1
 BEGIN
     ICON            128,IDC_STATIC,14,14,21,20
-    LTEXT           "SnapBox, Version 1.0",IDC_STATIC,42,14,114,8,SS_NOPREFIX
+    LTEXT           "SnapView, Version 1.0",IDC_STATIC,42,14,114,8,SS_NOPREFIX
     LTEXT           "Copyright (C) 2009",IDC_STATIC,42,26,114,8
     DEFPUSHBUTTON   "OK",IDOK,113,41,50,14,WS_GROUP
 END
@@ -88,7 +88,7 @@ END
 IDD_OPTIONS DIALOGEX 0, 0, 312, 90
 STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "SnapBox Options"
+CAPTION "SnapView Options"
 FONT 8, "Tahoma", 0, 0, 0x1
 BEGIN
     RTEXT           "&Snaps To Keep In History",IDC_STATIC,4,5,96,8
@@ -178,10 +178,10 @@ BEGIN
     BEGIN
         BLOCK "040904E4"
         BEGIN
-            VALUE "FileDescription", "SnapBox"
+            VALUE "FileDescription", "SnapView"
             VALUE "FileVersion", VERSION_STRING
             VALUE "LegalCopyright", "Copyright (c) 2009 Brant Burnett and Grey Burnett.  All Rights Reserved."
-            VALUE "ProductName", "SnapBox"
+            VALUE "ProductName", "SnapView"
             VALUE "ProductVersion", VERSION_STRING
         END
     END
@@ -199,15 +199,15 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_APP_TITLE           "SnapBox"
+    IDS_APP_TITLE           "SnapView"
     IDS_FILE_FILTER         "Portable Network Graphics (*.png)\t*.png\tWindows Bitmap (*.bmp)\t*.bmp\tGraphics Interchange Format (*.gif)\t*.gif\tJPEG Picture (*.jpg, *.jpeg)\t*.jpg;*.jpeg\t"
-    IDC_SNAPBOX             "SNAPBOX"
+    IDC_SNAPVIEW             "SNAPVIEW"
 END
 
 STRINGTABLE 
 BEGIN
     IDC_CAPTUREBOX          "CAPTUREBOX"
-    IDC_SNAPBOXBASE         "SNAPBOXBASE"
+    IDC_SNAPVIEWBASE         "SNAPVIEWBASE"
 END
 
 #endif    // English (U.S.) resources

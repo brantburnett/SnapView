@@ -32,7 +32,7 @@ function Add-RoundedRectangle(
     $path.CloseFigure()
 }
 
-function Draw-SnapBoxMark(
+function Draw-SnapViewMark(
     [System.Drawing.Graphics]$graphics,
     [float]$x,
     [float]$y,
@@ -146,7 +146,7 @@ function New-SquareAsset([int]$size) {
     $bitmap = New-ArgbBitmap $size $size
     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
     $graphics.Clear([System.Drawing.Color]::Transparent)
-    Draw-SnapBoxMark $graphics 0 0 $size
+    Draw-SnapViewMark $graphics 0 0 $size
     $graphics.Dispose()
     return $bitmap
 }
@@ -174,7 +174,7 @@ function New-BrandAsset(
     elseif ($markPosition -eq 'Top') {
         $markY = $height * 0.06
     }
-    Draw-SnapBoxMark $graphics $markX $markY $markSize
+    Draw-SnapViewMark $graphics $markX $markY $markSize
     $backgroundBrush.Dispose()
     $graphics.Dispose()
     return $bitmap
@@ -186,9 +186,9 @@ try {
     foreach ($size in $iconSizes) {
         $bitmap = New-SquareAsset $size
         $iconBitmaps += $bitmap
-        Save-Png $bitmap (Join-Path $imagesDirectory "SnapBox-$size.png")
+        Save-Png $bitmap (Join-Path $imagesDirectory "SnapView-$size.png")
     }
-    Write-Icon $iconBitmaps (Join-Path $imagesDirectory 'SnapBox.ico')
+    Write-Icon $iconBitmaps (Join-Path $imagesDirectory 'SnapView.ico')
 }
 finally {
     foreach ($bitmap in $iconBitmaps) {

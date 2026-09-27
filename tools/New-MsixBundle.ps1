@@ -34,7 +34,7 @@ foreach ($architecture in $expectedArchitectures) {
 
 $outputDirectory = Split-Path -Parent $OutputPath
 New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
-$bundleInputDirectory = Join-Path ([System.IO.Path]::GetTempPath()) "SnapBoxBundle-$([System.Guid]::NewGuid())"
+$bundleInputDirectory = Join-Path ([System.IO.Path]::GetTempPath()) "SnapViewBundle-$([System.Guid]::NewGuid())"
 New-Item -ItemType Directory -Path $bundleInputDirectory -Force | Out-Null
 
 try {

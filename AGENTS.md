@@ -1,14 +1,14 @@
-# SnapBox Agent Guide
+# SnapView Agent Guide
 
 ## Repository overview
 
-SnapBox is a native Windows desktop screenshot utility. The application is a
+SnapView is a native Windows desktop screenshot utility. The application is a
 Unicode Win32 C++ project; its installer is an MSIX packaging project. The solution is
-`SnapBox.slnx`, with these projects:
+`SnapView.slnx`, with these projects:
 
-- `SnapBox\SnapBox.vcxproj`: application (`Debug|x64`, `Release|x64`,
+- `SnapView\SnapView.vcxproj`: application (`Debug|x64`, `Release|x64`,
   `Debug|ARM64`, and `Release|ARM64`)
-- `SnapBoxPackage\SnapBoxPackage.wapproj`: MSIX package, built as part of the
+- `SnapViewPackage\SnapViewPackage.wapproj`: MSIX package, built as part of the
   solution
 
 The native project uses the `v145` toolset, the Windows App SDK, and
@@ -16,7 +16,7 @@ manifest-mode vcpkg. Its only vcpkg dependency is Xerces-C, installed using
 the `x64-windows-static` or `arm64-windows-static` triplet in
 `vcpkg_installed\`.
 
-SnapBox remains framework-dependent for the Windows App SDK. The SDK
+SnapView remains framework-dependent for the Windows App SDK. The SDK
 bootstrapper initializes before the application's entry point. If the matching
 runtime is missing, Windows displays acquisition UI; the MSIX package does not
 bundle or silently install the runtime.
@@ -58,30 +58,30 @@ Then build the solution. `/restore` restores the Windows App SDK NuGet
 packages.
 
 ```bat
-msbuild SnapBox.slnx /restore /m /p:Configuration=Debug /p:Platform=x64
+msbuild SnapView.slnx /restore /m /p:Configuration=Debug /p:Platform=x64
 ```
 
 For a release build:
 
 ```bat
-msbuild SnapBox.slnx /restore /m /p:Configuration=Release /p:Platform=x64
+msbuild SnapView.slnx /restore /m /p:Configuration=Release /p:Platform=x64
 ```
 
 For an ARM64 release build:
 
 ```bat
-msbuild SnapBox.slnx /restore /m /p:Configuration=Release /p:Platform=ARM64
+msbuild SnapView.slnx /restore /m /p:Configuration=Release /p:Platform=ARM64
 ```
 
 To build only the executable, which avoids packaging MSIX:
 
 ```bat
-msbuild SnapBox\SnapBox.vcxproj /restore /m /p:Configuration=Debug /p:Platform=x64
+msbuild SnapView\SnapView.vcxproj /restore /m /p:Configuration=Debug /p:Platform=x64
 ```
 
 The application is emitted to
-`artifacts\bin\SnapBox\<configuration>-<architecture>\SnapBox.exe` (for
-example, `artifacts\bin\SnapBox\release-arm64\SnapBox.exe`). The solution
+`artifacts\bin\SnapView\<configuration>-<architecture>\SnapView.exe` (for
+example, `artifacts\bin\SnapView\release-arm64\SnapView.exe`). The solution
 build also produces an architecture-specific MSIX under
 `artifacts\publish\<configuration>\`. Build both architectures, then create a
 bundle with:
@@ -90,7 +90,7 @@ bundle with:
 powershell -File tools\New-MsixBundle.ps1 ^
   -PackageDirectory artifacts\publish\release ^
   -Version <version> ^
-  -OutputPath artifacts\publish\release\SnapBox-<version>.msixbundle
+  -OutputPath artifacts\publish\release\SnapView-<version>.msixbundle
 ```
 
 Intermediate files are stored under
@@ -112,7 +112,7 @@ name of the Azure Trusted Signing certificate profile. Obtain the exact value
 from a previously signed executable with:
 
 ```powershell
-(Get-AuthenticodeSignature .\SnapBox.exe).SignerCertificate.Subject
+(Get-AuthenticodeSignature .\SnapView.exe).SignerCertificate.Subject
 ```
 
 The MSIX manifest publisher must exactly match that subject. MSIX provides the
@@ -129,15 +129,15 @@ or installer content.
 - Keep the application x64 and ARM64 settings aligned when updating project,
   dependency, or installer behavior.
 - Add C++ source, headers, resources, and images to
-  `SnapBox\SnapBox.vcxproj` and keep `SnapBox\SnapBox.vcxproj.filters` in
+  `SnapView\SnapView.vcxproj` and keep `SnapView\SnapView.vcxproj.filters` in
   sync for Visual Studio users.
 - `stdafx.cpp` creates the precompiled header. Files using shared Windows or
   Xerces headers should include `stdafx.h` first.
 - Preserve the project runtime-library selection: `/MTd` for Debug and `/MT`
   for Release. New native dependencies must be compatible with the static
   vcpkg triplet.
-- Update `SnapBoxPackage\Package.appxmanifest` and
-  `SnapBoxPackage\SnapBoxPackage.wapproj` when package identity, installable
+- Update `SnapViewPackage\Package.appxmanifest` and
+  `SnapViewPackage\SnapViewPackage.wapproj` when package identity, installable
   files, or installer behavior changes. Do not hand-edit generated build
   output.
 - Use Unicode Win32 APIs and project conventions (`TCHAR`, `wstring`, and

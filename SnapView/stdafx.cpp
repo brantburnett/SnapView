@@ -1,5 +1,5 @@
 // stdafx.cpp : source file that includes just the standard includes
-// SnapBox.pch will be the pre-compiled header
+// SnapView.pch will be the pre-compiled header
 // stdafx.obj will contain the pre-compiled type information
 
 #include "stdafx.h"

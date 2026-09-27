@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "SnapBoxBase.h"
-#include "SnapBox.h"
+#include "SnapViewBase.h"
+#include "SnapView.h"
 #include "CaptureBox.h"
 #include "Options.h"
 #include <initguid.h>
@@ -25,8 +25,8 @@ INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 ATOM BaseRegisterClass(HINSTANCE hInstance)
 {
     LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadString(hInstance, IDC_SNAPBOXBASE, szBaseWindowClass, MAX_LOADSTRING);
-    hIconLarge = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SNAPBOX));
+    LoadString(hInstance, IDC_SNAPVIEWBASE, szBaseWindowClass, MAX_LOADSTRING);
+    hIconLarge = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SNAPVIEW));
 
     WNDCLASSEX wcex;
     memset(&wcex, 0, sizeof(WNDCLASSEX));
@@ -95,7 +95,7 @@ void FillNotifyIconData(HWND hWnd, PNOTIFYICONDATA data)
     data->uID = 1;
     data->uFlags = NIF_MESSAGE | NIF_TIP | NIF_SHOWTIP | NIF_ICON;
     data->uCallbackMessage = WM_NOTIFYICON;
-    _tcscpy_s(data->szTip, 128, _T("SnapBox - Click To Capture"));
+    _tcscpy_s(data->szTip, 128, _T("SnapView - Click To Capture"));
 
     if (IsWin7OrLater())
         data->guidItem = NOTIFYICONGUID;
@@ -107,7 +107,7 @@ void LoadTrayIcon(HWND hWnd)
     FillNotifyIconData(hWnd, &data);
 
     data.uFlags |= NIF_ICON;
-    data.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_SNAPBOX));
+    data.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_SNAPVIEW));
 
     Shell_NotifyIcon(NIM_ADD, &data);
 

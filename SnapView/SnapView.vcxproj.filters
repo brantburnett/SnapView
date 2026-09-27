@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -27,10 +27,10 @@
     <ClCompile Include="SizeMarks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SnapBox.cpp">
+    <ClCompile Include="SnapView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SnapBoxBase.cpp">
+    <ClCompile Include="SnapViewBase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SnapHook.cpp">
@@ -59,10 +59,10 @@
     <ClInclude Include="SizeMarks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SnapBox.h">
+    <ClInclude Include="SnapView.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SnapBoxBase.h">
+    <ClInclude Include="SnapViewBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SnapHook.h">
@@ -76,12 +76,12 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\images\SnapBox.ico">
+    <Image Include="..\images\SnapView.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="SnapBox.rc">
+    <ResourceCompile Include="SnapView.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

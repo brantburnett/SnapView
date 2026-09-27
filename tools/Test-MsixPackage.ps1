@@ -5,7 +5,9 @@ param(
 
     [string]$ExpectedIdentityName,
 
-    [string]$ExpectedPublisher
+    [string]$ExpectedPublisher,
+
+    [string]$ExpectedPublisherDisplayName
 
 )
 
@@ -32,6 +34,7 @@ try {
     $namespaceManager = [System.Xml.XmlNamespaceManager]::new($manifest.NameTable)
     $namespaceManager.AddNamespace('appx', 'http://schemas.microsoft.com/appx/manifest/foundation/windows10')
     $identity = $manifest.SelectSingleNode('/appx:Package/appx:Identity', $namespaceManager)
+    $publisherDisplayName = $manifest.SelectSingleNode('/appx:Package/appx:Properties/appx:PublisherDisplayName', $namespaceManager)
     $resource = $manifest.SelectSingleNode('/appx:Package/appx:Resources/appx:Resource', $namespaceManager)
     if ($null -eq $identity) {
         throw "Package '$packagePath' does not contain an identity."
@@ -49,6 +52,12 @@ try {
     if (-not [string]::IsNullOrWhiteSpace($ExpectedPublisher) -and
         -not [string]::Equals($identity.Publisher, $ExpectedPublisher, [System.StringComparison]::OrdinalIgnoreCase)) {
         throw "Package identity publisher '$($identity.Publisher)' does not match expected publisher '$ExpectedPublisher'."
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($ExpectedPublisherDisplayName) -and
+        ($null -eq $publisherDisplayName -or
+        -not [string]::Equals($publisherDisplayName.InnerText, $ExpectedPublisherDisplayName, [System.StringComparison]::Ordinal))) {
+        throw "Package publisher display name '$($publisherDisplayName.InnerText)' does not match expected publisher display name '$ExpectedPublisherDisplayName'."
     }
 }
 finally {

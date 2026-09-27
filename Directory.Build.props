@@ -6,6 +6,7 @@
     <MSIXPackageVersion Condition="'$(InstallerVersion)' != ''">$(InstallerVersion).0</MSIXPackageVersion>
     <MSIXPackageIdentityName Condition="'$(MSIXPackageIdentityName)' == ''">SnapView</MSIXPackageIdentityName>
     <MSIXPackagePublisher Condition="'$(MSIXPackagePublisher)' == ''">CN=BurnettSoft</MSIXPackagePublisher>
+    <MSIXPackagePublisherDisplayName Condition="'$(MSIXPackagePublisherDisplayName)' == ''">Brant Burnett</MSIXPackagePublisherDisplayName>
     <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts\</ArtifactsPath>
     <ArtifactConfiguration>$([System.String]::Copy('$(Configuration)').ToLowerInvariant())</ArtifactConfiguration>
     <ArtifactPlatform>$([System.String]::Copy('$(Platform)').ToLowerInvariant())</ArtifactPlatform>

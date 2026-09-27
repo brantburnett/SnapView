@@ -114,6 +114,7 @@ uses the `publish` GitHub environment and requires the following configuration:
 | Repository variable | `MS_STORE_FLIGHT_ID` | The ID of the existing test flight that receives tagged builds. After authenticating the Store CLI, run `msstore flights list <product-id>` to list its IDs. |
 | Repository variable | `MS_STORE_PACKAGE_IDENTITY_NAME` | The package identity name reserved for SnapView in Partner Center, from the product's package identity details. |
 | Repository variable | `MS_STORE_PACKAGE_PUBLISHER` | The publisher distinguished name reserved for SnapView in Partner Center, from the product's package identity details. It must match the publisher in the MSIX manifest submitted to Store. |
+| Repository variable | `MS_STORE_PACKAGE_PUBLISHERDISPLAYNAME` | The human-readable publisher name from Partner Center. It is written to the MSIX manifest's `PublisherDisplayName` property. |
 
 Configure a Microsoft Entra federated credential on the existing application
 registration for GitHub Actions. Select **Certificates & secrets** >

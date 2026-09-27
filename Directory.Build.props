@@ -4,8 +4,11 @@
     <VersionCore>$([System.Text.RegularExpressions.Regex]::Match('$(Version)', '^\d+\.\d+\.\d+').Value)</VersionCore>
     <InstallerVersion Condition="'$(VersionCore)' != ''">$(VersionCore)</InstallerVersion>
     <MSIXPackageVersion Condition="'$(InstallerVersion)' != ''">$(InstallerVersion).0</MSIXPackageVersion>
+    <MSIXPackageIdentityName Condition="'$(MSIXPackageIdentityName)' == '' and '$(MS_STORE_PACKAGE_IDENTITY_NAME)' != ''">$(MS_STORE_PACKAGE_IDENTITY_NAME)</MSIXPackageIdentityName>
     <MSIXPackageIdentityName Condition="'$(MSIXPackageIdentityName)' == ''">SnapView</MSIXPackageIdentityName>
+    <MSIXPackagePublisher Condition="'$(MSIXPackagePublisher)' == '' and '$(MS_STORE_PACKAGE_PUBLISHER)' != ''">$(MS_STORE_PACKAGE_PUBLISHER)</MSIXPackagePublisher>
     <MSIXPackagePublisher Condition="'$(MSIXPackagePublisher)' == ''">CN=BurnettSoft</MSIXPackagePublisher>
+    <MSIXPackagePublisherDisplayName Condition="'$(MSIXPackagePublisherDisplayName)' == '' and '$(MS_STORE_PACKAGE_PUBLISHERDISPLAYNAME)' != ''">$(MS_STORE_PACKAGE_PUBLISHERDISPLAYNAME)</MSIXPackagePublisherDisplayName>
     <MSIXPackagePublisherDisplayName Condition="'$(MSIXPackagePublisherDisplayName)' == ''">Brant Burnett</MSIXPackagePublisherDisplayName>
     <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts\</ArtifactsPath>
     <ArtifactConfiguration>$([System.String]::Copy('$(Configuration)').ToLowerInvariant())</ArtifactConfiguration>

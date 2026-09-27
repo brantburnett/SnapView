@@ -80,7 +80,7 @@ jobs:
           MS_STORE_PACKAGE_IDENTITY_NAME: ${{ vars.MS_STORE_PACKAGE_IDENTITY_NAME }}
           MS_STORE_PACKAGE_PUBLISHER: ${{ vars.MS_STORE_PACKAGE_PUBLISHER }}
           MS_STORE_PACKAGE_PUBLISHERDISPLAYNAME: ${{ vars.MS_STORE_PACKAGE_PUBLISHERDISPLAYNAME }}
-        run: msbuild SnapViewPackage\SnapViewPackage.wapproj /restore /m /p:Configuration=Release /p:Platform=${{ matrix.platform }} /p:BuildProjectReferences=false "/p:SolutionDir=${{ github.workspace }}\" "/p:Version=${{ needs.prepare.outputs.version }}" "/p:MSIXPackageIdentityName=$env:MS_STORE_PACKAGE_IDENTITY_NAME" "/p:MSIXPackagePublisher=$env:MS_STORE_PACKAGE_PUBLISHER" "/p:MSIXPackagePublisherDisplayName=$env:MS_STORE_PACKAGE_PUBLISHERDISPLAYNAME"
+        run: msbuild SnapViewPackage\SnapViewPackage.wapproj /restore /m /p:Configuration=Release /p:Platform=${{ matrix.platform }} /p:BuildProjectReferences=false "/p:SolutionDir=${{ github.workspace }}\" "/p:Version=${{ needs.prepare.outputs.version }}"
 
       - name: Validate unsigned MSIX package
         shell: pwsh

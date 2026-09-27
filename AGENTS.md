@@ -11,10 +11,10 @@ Unicode Win32 C++ project; its installer is an MSIX packaging project. The solut
 - `SnapViewPackage\SnapViewPackage.wapproj`: MSIX package, built as part of the
   solution
 
-The native project uses the `v145` toolset, the Windows App SDK, and
-manifest-mode vcpkg. Its only vcpkg dependency is Xerces-C, installed using
-the `x64-windows-static` or `arm64-windows-static` triplet in
-`vcpkg_installed\`.
+The native project uses the `v145` toolset and the Windows App SDK. Its
+per-user settings are stored in the installed MSIX package's
+`ApplicationData.LocalSettings` store; running the executable outside an MSIX
+package is unsupported.
 
 SnapView remains framework-dependent for the Windows App SDK. The SDK
 bootstrapper initializes before the application's entry point. If the matching
@@ -27,35 +27,16 @@ bundle or silently install the runtime.
 - Visual Studio with the **Desktop development with C++** workload, the
   `v145` toolset, a Windows 10/11 SDK version 10.0.26100.0 or later, and
   Visual Studio's MSIX packaging tools
-- vcpkg; use the copy supplied with Visual Studio or a separately bootstrapped
-  vcpkg executable
 - Visual Studio's MSIX packaging tools
-- Network access on the first restore to download vcpkg and NuGet packages
+- Network access on the first restore to download NuGet packages
 
-Do not check in `vcpkg_installed\`, build output, or Visual Studio user files;
-they are intentionally ignored.
+Do not check in build output or Visual Studio user files; they are
+intentionally ignored.
 
 ## Restore and build
 
 Run the following from an **x64 Developer Command Prompt for Visual Studio** at
-the repository root. Restore the vcpkg manifest before building; it creates the
-project-local `vcpkg_installed\` directory using the pinned baseline in
-`vcpkg-configuration.json`.
-
-```bat
-vcpkg install --triplet x64-windows-static
-```
-
-For ARM64 builds, install the ARM64 triplet instead:
-
-```bat
-vcpkg install --triplet arm64-windows-static
-```
-
-If `vcpkg` is not on `PATH`, Visual Studio installs it at a path similar to
-`C:\Program Files\Microsoft Visual Studio\<version>\<edition>\VC\vcpkg\vcpkg.exe`.
-Then build the solution. `/restore` restores the Windows App SDK NuGet
-packages.
+the repository root. `/restore` restores the Windows App SDK NuGet packages.
 
 ```bat
 msbuild SnapView.slnx /restore /m /p:Configuration=Debug /p:Platform=x64
@@ -150,10 +131,9 @@ or installer content.
   `SnapView\SnapView.vcxproj` and keep `SnapView\SnapView.vcxproj.filters` in
   sync for Visual Studio users.
 - `stdafx.cpp` creates the precompiled header. Files using shared Windows or
-  Xerces headers should include `stdafx.h` first.
+  C++/WinRT headers should include `stdafx.h` first.
 - Preserve the project runtime-library selection: `/MTd` for Debug and `/MT`
-  for Release. New native dependencies must be compatible with the static
-  vcpkg triplet.
+  for Release.
 - Update `SnapViewPackage\Package.appxmanifest` and
   `SnapViewPackage\SnapViewPackage.wapproj` when package identity, installable
   files, or installer behavior changes. Do not hand-edit generated build

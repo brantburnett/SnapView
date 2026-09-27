@@ -28,5 +28,5 @@ extern OPTIONS options;
 
 ATOM RegisterOptionsClass(HINSTANCE hInst);
 void LoadOptions();
-bool SaveOptions();
+bool SaveOptions(const POPTIONS newOptions);
 INT_PTR ShowOptionsDialog(HWND hWnd);

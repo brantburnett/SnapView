@@ -82,6 +82,7 @@ jobs:
       - name: Validate unsigned MSIX package
         shell: pwsh
         env:
+          MS_STORE_PACKAGE_IDENTITY_NAME: ${{ vars.MS_STORE_PACKAGE_IDENTITY_NAME }}
           MS_STORE_PACKAGE_PUBLISHER: ${{ vars.MS_STORE_PACKAGE_PUBLISHER }}
         run: |
           $packages = @(Get-ChildItem -Path artifacts\publish\release -Recurse -File -Filter '*.msix')

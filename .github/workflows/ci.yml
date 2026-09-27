@@ -53,18 +53,43 @@ jobs:
         with:
           platform: ${{ matrix.platform }}
 
+      - name: Validate Store package publisher
+        shell: pwsh
+        env:
+          MS_STORE_PACKAGE_IDENTITY_NAME: ${{ vars.MS_STORE_PACKAGE_IDENTITY_NAME }}
+          MS_STORE_PACKAGE_PUBLISHER: ${{ vars.MS_STORE_PACKAGE_PUBLISHER }}
+        run: |
+          $requiredValues = @{
+            MS_STORE_PACKAGE_IDENTITY_NAME = $env:MS_STORE_PACKAGE_IDENTITY_NAME
+            MS_STORE_PACKAGE_PUBLISHER = $env:MS_STORE_PACKAGE_PUBLISHER
+          }
+          $missing = @($requiredValues.GetEnumerator() | Where-Object { [string]::IsNullOrWhiteSpace($_.Value) } | ForEach-Object Key)
+          if ($missing.Count -gt 0) {
+            throw "Missing required Store package configuration: $($missing -join ', ')."
+          }
+
+      - name: Build executable
+        shell: pwsh
+        run: msbuild SnapView\SnapView.vcxproj /restore /m /p:Configuration=Release /p:Platform=${{ matrix.platform }} "/p:SolutionDir=${{ github.workspace }}\" "/p:Version=${{ needs.prepare.outputs.version }}"
+
       - name: Build unsigned MSIX package
         shell: pwsh
-        run: msbuild SnapView.slnx /restore /m /p:Configuration=Release /p:Platform=${{ matrix.platform }} "/p:Version=${{ needs.prepare.outputs.version }}"
+        env:
+          MS_STORE_PACKAGE_IDENTITY_NAME: ${{ vars.MS_STORE_PACKAGE_IDENTITY_NAME }}
+          MS_STORE_PACKAGE_PUBLISHER: ${{ vars.MS_STORE_PACKAGE_PUBLISHER }}
+        run: msbuild SnapViewPackage\SnapViewPackage.wapproj /restore /m /p:Configuration=Release /p:Platform=${{ matrix.platform }} /p:BuildProjectReferences=false "/p:SolutionDir=${{ github.workspace }}\" "/p:Version=${{ needs.prepare.outputs.version }}" "/p:MSIXPackageIdentityName=$env:MS_STORE_PACKAGE_IDENTITY_NAME" "/p:MSIXPackagePublisher=$env:MS_STORE_PACKAGE_PUBLISHER"
 
       - name: Validate unsigned MSIX package
         shell: pwsh
+        env:
+          MS_STORE_PACKAGE_IDENTITY_NAME: ${{ vars.MS_STORE_PACKAGE_IDENTITY_NAME }}
+          MS_STORE_PACKAGE_PUBLISHER: ${{ vars.MS_STORE_PACKAGE_PUBLISHER }}
         run: |
           $packages = @(Get-ChildItem -Path artifacts\publish\release -Recurse -File -Filter '*.msix')
           if ($packages.Count -ne 1) {
             throw "Expected exactly one MSIX package, but found $($packages.Count)."
           }
-          tools\Test-MsixPackage.ps1 -PackagePath $packages[0].FullName -ExpectedPublisher 'CN=BurnettSoft'
+          tools\Test-MsixPackage.ps1 -PackagePath $packages[0].FullName -ExpectedIdentityName $env:MS_STORE_PACKAGE_IDENTITY_NAME -ExpectedPublisher $env:MS_STORE_PACKAGE_PUBLISHER
 
       - uses: ./.github/actions/archive-msix-artifacts
         with:

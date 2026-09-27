@@ -3,9 +3,9 @@
 
 #include "stdafx.h"
 #include "SnapHook.h"
-#include "SnapBoxBase.h"
+#include "SnapViewBase.h"
 #include "CaptureBox.h"
-#include "SnapBox.h"
+#include "SnapView.h"
 
 bool lShiftDown = false, rShiftDown = false, lCtrlDown = false, rCtrlDown = false;
 HHOOK hKeyboardHook, hMouseHook;

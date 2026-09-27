@@ -17,17 +17,17 @@ runs:
       if: ${{ inputs.include-runtime-payload == 'true' }}
       uses: actions/upload-artifact@v7
       with:
-        name: snapbox-runtime-${{ inputs.platform }}
+        name: snapview-runtime-${{ inputs.platform }}
         path: |
-          artifacts\bin\SnapBox\release-*\*.exe
-          artifacts\bin\SnapBox\release-*\*.dll
-          artifacts\bin\SnapBox\release-*\*.pri
-          artifacts\bin\SnapBox\release-*\*.winmd
+          artifacts\bin\SnapView\release-*\*.exe
+          artifacts\bin\SnapView\release-*\*.dll
+          artifacts\bin\SnapView\release-*\*.pri
+          artifacts\bin\SnapView\release-*\*.winmd
         if-no-files-found: error
 
     - name: Archive MSIX package
       uses: actions/upload-artifact@v7
       with:
-        name: snapbox-msix-${{ inputs.platform }}
+        name: snapview-msix-${{ inputs.platform }}
         path: artifacts\publish\release\**\*.msix
         if-no-files-found: error

@@ -1,9 +1,9 @@
-// SnapBox.cpp : Defines the entry point for the application.
+// SnapView.cpp : Defines the entry point for the application.
 //
 
 #include "stdafx.h"
-#include "SnapBox.h"
-#include "SnapBoxBase.h"
+#include "SnapView.h"
+#include "SnapViewBase.h"
 #include "CaptureBox.h"
 #include "Options.h"
 #include "Share.h"
@@ -56,14 +56,14 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     HRESULT oleInitializeResult = OleInitialize(NULL);
     if (FAILED(oleInitializeResult))
     {
-        MessageBox(NULL, _T("Unable to initialize OLE support."), _T("SnapBox"), MB_ICONERROR | MB_OK);
+        MessageBox(NULL, _T("Unable to initialize OLE support."), _T("SnapView"), MB_ICONERROR | MB_OK);
         return 1;
     }
 
     HRESULT initializeResult = RoInitialize(RO_INIT_SINGLETHREADED);
     if (FAILED(initializeResult))
     {
-        MessageBox(NULL, _T("Unable to initialize Windows Runtime support."), _T("SnapBox"), MB_ICONERROR | MB_OK);
+        MessageBox(NULL, _T("Unable to initialize Windows Runtime support."), _T("SnapView"), MB_ICONERROR | MB_OK);
         OleUninitialize();
         return 1;
     }
@@ -78,7 +78,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     MSG msg;
 
     // Initialize global strings and window classes
-    LoadString(hInstance, IDC_SNAPBOX, szWindowClass, MAX_LOADSTRING);
+    LoadString(hInstance, IDC_SNAPVIEW, szWindowClass, MAX_LOADSTRING);
     BaseRegisterClass(hInstance);
     MyRegisterClass(hInstance);
     RegisterCaptureBoxClass(hInstance);
@@ -192,7 +192,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbClsExtra		= 0;
     wcex.cbWndExtra		= 0;
     wcex.hInstance		= hInstance;
-    wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SNAPBOX));
+    wcex.hIcon			= LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SNAPVIEW));
     wcex.hCursor		= LoadCursor(NULL, IDC_CROSS);
     wcex.hbrBackground	= CreateSolidBrush(RGB(0, 0, 0));
     wcex.lpszClassName	= szWindowClass;

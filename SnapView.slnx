@@ -1,0 +1,10 @@
+<Solution>
+  <Configurations>
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="SnapView/SnapView.vcxproj" Id="c6b6706f-6e7e-412a-abea-e4dc4f10d86a" />
+  <Project Path="SnapViewPackage/SnapViewPackage.wapproj" Type="C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5">
+    <Build />
+  </Project>
+</Solution>

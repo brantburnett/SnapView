@@ -1,18 +1,18 @@
 #include "stdafx.h"
 #include "Options.h"
-#include "SnapBox.h"
+#include "SnapView.h"
 #include "CaptureBox.h"
-#include "SnapBoxBase.h"
+#include "SnapViewBase.h"
 
 #include <string>
 
 using namespace xercesc;
 
-#define SETTINGS_FILENAME	_T("settings")
+#define SETTINGS_FILENAME	_T("SnapViewSettings")
 #define SETTINGS_EXTENSION	_T(".xml")
 
-#define SETTINGS_NAMESPACE			TEXT("http://www.snapbox.com/settings/2009")
-#define SETTINGS_ROOT				TEXT("SnapBox")
+#define SETTINGS_NAMESPACE			TEXT("http://www.snapview.com/settings/2009")
+#define SETTINGS_ROOT				TEXT("SnapView")
 #define SETTINGS_MAXHISTORY			TEXT("MaxHistory")
 #define SETTINGS_QUICKSAVEPATH		TEXT("QuickSavePath")
 #define SETTINGS_DEFAULTSAVETYPE	TEXT("DefaultSaveType")
@@ -97,11 +97,11 @@ bool GetSettingsFileName(LPTSTR szPath, bool createFolder)
         if (createFolder && _taccess(szPath, 0))
             if (_tmkdir(szPath)) return false;
 
-        _tcscat_s(szPath, MAX_PATH, _T("\\SnapBox"));
+        _tcscat_s(szPath, MAX_PATH, _T("\\SnapView"));
         if (createFolder && _taccess(szPath, 0))
             if (_tmkdir(szPath)) return false;
 
-        _tcscat_s(szPath, MAX_PATH, _T("\\settings.xml"));
+        _tcscat_s(szPath, MAX_PATH, _T("\\SnapViewSettings.xml"));
     }
 
     return true;

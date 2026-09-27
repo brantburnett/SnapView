@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -20,7 +20,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{C6B6706F-6E7E-412A-ABEA-E4DC4F10D86A}</ProjectGuid>
-    <RootNamespace>SnapBox</RootNamespace>
+    <RootNamespace>SnapView</RootNamespace>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.17763.0</WindowsTargetPlatformMinVersion>
@@ -220,7 +220,7 @@
       <AdditionalDependencies>WindowsApp.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
-      <AdditionalManifestFiles>$(ProjectDir)SnapBox.exe.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+      <AdditionalManifestFiles>$(ProjectDir)SnapView.exe.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -231,8 +231,8 @@
     <ClCompile Include="Share.cpp" />
     <ClCompile Include="Options.cpp" />
     <ClCompile Include="SizeMarks.cpp" />
-    <ClCompile Include="SnapBox.cpp" />
-    <ClCompile Include="SnapBoxBase.cpp" />
+    <ClCompile Include="SnapView.cpp" />
+    <ClCompile Include="SnapViewBase.cpp" />
     <ClCompile Include="SnapHook.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -248,17 +248,17 @@
     <ClInclude Include="Options.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SizeMarks.h" />
-    <ClInclude Include="SnapBox.h" />
-    <ClInclude Include="SnapBoxBase.h" />
+    <ClInclude Include="SnapView.h" />
+    <ClInclude Include="SnapViewBase.h" />
     <ClInclude Include="SnapHook.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\images\SnapBox.ico" />
+    <Image Include="..\images\SnapView.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="SnapBox.rc" />
+    <ResourceCompile Include="SnapView.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

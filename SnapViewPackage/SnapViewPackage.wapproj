@@ -40,9 +40,9 @@
     <AppxPackageDir>$(ArtifactsPublishPath)</AppxPackageDir>
     <OutputPath>$(ArtifactsBinPath)</OutputPath>
     <IntermediateOutputPath>$(ArtifactsObjPath)</IntermediateOutputPath>
-    <EntryPointExe>SnapBox.exe</EntryPointExe>
-    <SnapBoxOutputDirectory>$(MSBuildThisFileDirectory)..\artifacts\bin\SnapBox\$(ArtifactConfigurationPlatform)\</SnapBoxOutputDirectory>
-    <EntryPointProjectUniqueName>..\SnapBox\SnapBox.vcxproj</EntryPointProjectUniqueName>
+    <EntryPointExe>SnapView.exe</EntryPointExe>
+    <SnapViewOutputDirectory>$(MSBuildThisFileDirectory)..\artifacts\bin\SnapView\$(ArtifactConfigurationPlatform)\</SnapViewOutputDirectory>
+    <EntryPointProjectUniqueName>..\SnapView\SnapView.vcxproj</EntryPointProjectUniqueName>
   </PropertyGroup>
   <ItemGroup>
     <None Include="Package.appxmanifest">
@@ -66,7 +66,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SnapBox\SnapBox.vcxproj" ReferenceOutputAssembly="false">
+    <ProjectReference Include="..\SnapView\SnapView.vcxproj" ReferenceOutputAssembly="false">
       <TreatAsPackageReference>false</TreatAsPackageReference>
       <SkipGetTargetFrameworkProperties>True</SkipGetTargetFrameworkProperties>
     </ProjectReference>
@@ -78,12 +78,12 @@
   <Target Name="NormalizePackageDependencies" BeforeTargets="_GenerateAppxPackageRecipeFile" DependsOnTargets="GeneratePackageManifest">
     <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\tools\Update-MsixPackageManifest.ps1&quot; -SourcePath &quot;$(FinalAppxManifestName)&quot; -DestinationPath &quot;$(FinalAppxManifestName)&quot; -Publisher &quot;$(MSIXPackagePublisher)&quot; -Version &quot;$(MSIXPackageVersion)&quot; -Architecture &quot;$(Platform)&quot; -RemovePackageDependencies" />
   </Target>
-  <Target Name="IncludeSnapBoxPayload" BeforeTargets="_ConvertItems">
+  <Target Name="IncludeSnapViewPayload" BeforeTargets="_ConvertItems">
     <ItemGroup>
-      <_FilteredNonWapProjProjectOutput Include="$(SnapBoxOutputDirectory)*.exe" />
-      <_FilteredNonWapProjProjectOutput Include="$(SnapBoxOutputDirectory)*.dll" />
-      <_FilteredNonWapProjProjectOutput Include="$(SnapBoxOutputDirectory)*.pri" />
-      <_FilteredNonWapProjProjectOutput Include="$(SnapBoxOutputDirectory)*.winmd" />
+      <_FilteredNonWapProjProjectOutput Include="$(SnapViewOutputDirectory)*.exe" />
+      <_FilteredNonWapProjProjectOutput Include="$(SnapViewOutputDirectory)*.dll" />
+      <_FilteredNonWapProjProjectOutput Include="$(SnapViewOutputDirectory)*.pri" />
+      <_FilteredNonWapProjProjectOutput Include="$(SnapViewOutputDirectory)*.winmd" />
     </ItemGroup>
   </Target>
 </Project>

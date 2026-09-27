@@ -54,8 +54,8 @@ namespace
                 [file, image](const DataTransferManager&, const DataRequestedEventArgs& args)
                 {
                     DataPackage data = args.Request().Data();
-                    data.Properties().Title(L"SnapBox screenshot");
-                    data.Properties().Description(L"Screenshot captured with SnapBox");
+                    data.Properties().Title(L"SnapView screenshot");
+                    data.Properties().Description(L"Screenshot captured with SnapView");
                     data.Properties().Thumbnail(image);
                     data.SetBitmap(image);
                     data.RequestedOperation(DataPackageOperation::Copy);

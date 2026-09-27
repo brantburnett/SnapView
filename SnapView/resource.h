@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by SnapBox.rc
+// Used by SnapView.rc
 //
 #define IDC_MYICON                      2
 #define IDC_MAXHISTORY                  3
@@ -11,17 +11,17 @@
 #define IDC_HIDEONNEWSNAP               8
 #define IDC_MAXHISTORYUPDWN             9
 #define IDC_SHOWHOVERINFO				10
-#define IDD_SNAPBOX_DIALOG              102
+#define IDD_SNAPVIEW_DIALOG              102
 #define IDS_APP_TITLE                   103
 #define IDD_ABOUTBOX                    103
 #define IDS_FILE_FILTER                 104
 #define IDD_OPTIONS                     104
-#define IDI_SNAPBOX                     107
-#define IDC_SNAPBOX                     109
+#define IDI_SNAPVIEW                     107
+#define IDC_SNAPVIEW                     109
 #define IDC_NOTIFYICONMENU              110
 #define IDC_CAPTUREMENU                 111
 #define IDC_CAPTUREBOX                  112
-#define IDC_SNAPBOXBASE                 113
+#define IDC_SNAPVIEWBASE                 113
 #define IDR_MAINFRAME                   128
 #define IDM_ABOUT                       1000
 #define IDM_EXIT                        1001

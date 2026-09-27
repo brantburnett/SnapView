@@ -14,7 +14,7 @@ Unicode Win32 C++ project; its installer is an MSIX packaging project. The solut
 The native project uses the `v145` toolset and the Windows App SDK. Its
 per-user settings are stored in the installed MSIX package's
 `ApplicationData.LocalSettings` store; running the executable outside an MSIX
-package is unsupported.
+package uses in-memory defaults and cannot view or save settings.
 
 SnapView remains framework-dependent for the Windows App SDK. The SDK
 bootstrapper initializes before the application's entry point. If the matching

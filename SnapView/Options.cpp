@@ -20,6 +20,8 @@ INT_PTR OptionsDialogProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 namespace
 {
+    bool settingsStoreAvailable = true;
+
     bool TryGetInt32(
         const winrt::Windows::Foundation::Collections::IPropertySet& values,
         const wchar_t* key,
@@ -80,41 +82,52 @@ void SetDefaultOptions(POPTIONS defaults)
 void LoadOptions()
 {
     SetDefaultOptions(&options);
+    settingsStoreAvailable = true;
 
-    const auto values = winrt::Windows::Storage::ApplicationData::Current().LocalSettings().Values();
-    int32_t value;
-    if (TryGetInt32(values, SETTINGS_MAXHISTORY, value))
+    try
     {
-        if (value > MAX_CAPTURE_HISTORY)
-            options.maxHistory = MAX_CAPTURE_HISTORY;
-        else if (value >= 0)
-            options.maxHistory = value;
-    }
+        const auto values = winrt::Windows::Storage::ApplicationData::Current().LocalSettings().Values();
+        int32_t value;
+        if (TryGetInt32(values, SETTINGS_MAXHISTORY, value))
+        {
+            if (value > MAX_CAPTURE_HISTORY)
+                options.maxHistory = MAX_CAPTURE_HISTORY;
+            else if (value >= 0)
+                options.maxHistory = value;
+        }
 
-    winrt::hstring quickSavePath;
-    if (TryGetString(values, SETTINGS_QUICKSAVEPATH, quickSavePath) &&
-        quickSavePath.size() < MAX_PATH)
+        winrt::hstring quickSavePath;
+        if (TryGetString(values, SETTINGS_QUICKSAVEPATH, quickSavePath) &&
+            quickSavePath.size() < MAX_PATH)
+        {
+            wcscpy_s(options.quickSavePath, MAX_PATH, quickSavePath.c_str());
+        }
+
+        if (TryGetInt32(values, SETTINGS_DEFAULTSAVETYPE, value))
+        {
+            options.defaultSaveType = value >= SAVETYPE_PNG && value <= SAVETYPE_JPEG
+                ? value
+                : SAVETYPE_PNG;
+        }
+
+        bool boolValue;
+        if (TryGetBoolean(values, SETTINGS_HIDEONNEWSNAP, boolValue))
+            options.hideOnNewSnap = boolValue;
+
+        if (TryGetBoolean(values, SETTINGS_SHOWHOVERINFO, boolValue))
+            options.showHoverInfo = boolValue;
+    }
+    catch (const winrt::hresult_error&)
     {
-        wcscpy_s(options.quickSavePath, MAX_PATH, quickSavePath.c_str());
+        settingsStoreAvailable = false;
     }
-
-    if (TryGetInt32(values, SETTINGS_DEFAULTSAVETYPE, value))
-    {
-        options.defaultSaveType = value >= SAVETYPE_PNG && value <= SAVETYPE_JPEG
-            ? value
-            : SAVETYPE_PNG;
-    }
-
-    bool boolValue;
-    if (TryGetBoolean(values, SETTINGS_HIDEONNEWSNAP, boolValue))
-        options.hideOnNewSnap = boolValue;
-
-    if (TryGetBoolean(values, SETTINGS_SHOWHOVERINFO, boolValue))
-        options.showHoverInfo = boolValue;
 }
 
 bool SaveOptions(const POPTIONS newOptions)
 {
+    if (!settingsStoreAvailable)
+        return false;
+
     try
     {
         const auto values = winrt::Windows::Storage::ApplicationData::Current().LocalSettings().Values();
@@ -269,6 +282,16 @@ void InitOptionsDialog(HWND hDlg)
 
 INT_PTR ShowOptionsDialog(HWND hWnd)
 {
+    if (!settingsStoreAvailable)
+    {
+        MessageBox(
+            hWnd,
+            _T("Settings are unavailable when SnapView is run outside an installed MSIX package.\n\nInstall the MSIX package to view or change settings."),
+            _T("Settings Unavailable"),
+            MB_OK | MB_ICONERROR);
+        return -1;
+    }
+
     return DialogBox(hInst, MAKEINTRESOURCE(IDD_OPTIONS), hWnd, (DLGPROC)&OptionsDialogProc);
 }
 

@@ -4,6 +4,7 @@
     <VersionCore>$([System.Text.RegularExpressions.Regex]::Match('$(Version)', '^\d+\.\d+\.\d+').Value)</VersionCore>
     <InstallerVersion Condition="'$(VersionCore)' != ''">$(VersionCore)</InstallerVersion>
     <MSIXPackageVersion Condition="'$(InstallerVersion)' != ''">$(InstallerVersion).0</MSIXPackageVersion>
+    <MSIXPackageIdentityName Condition="'$(MSIXPackageIdentityName)' == ''">SnapView</MSIXPackageIdentityName>
     <MSIXPackagePublisher Condition="'$(MSIXPackagePublisher)' == ''">CN=BurnettSoft</MSIXPackagePublisher>
     <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts\</ArtifactsPath>
     <ArtifactConfiguration>$([System.String]::Copy('$(Configuration)').ToLowerInvariant())</ArtifactConfiguration>

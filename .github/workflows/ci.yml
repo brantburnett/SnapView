@@ -39,7 +39,6 @@ jobs:
 
   build:
     needs: prepare
-    if: github.event_name == 'pull_request'
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -65,8 +64,7 @@ jobs:
           if ($packages.Count -ne 1) {
             throw "Expected exactly one MSIX package, but found $($packages.Count)."
           }
-          $package = $packages[0]
-          tools\Test-MsixPackage.ps1 -PackagePath $package.FullName -ExpectedPublisher 'CN=BurnettSoft'
+          tools\Test-MsixPackage.ps1 -PackagePath $packages[0].FullName -ExpectedPublisher 'CN=BurnettSoft'
 
       - uses: ./.github/actions/archive-msix-artifacts
         with:
@@ -75,7 +73,6 @@ jobs:
 
   bundle:
     needs: [prepare, build]
-    if: github.event_name == 'pull_request'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7
@@ -91,177 +88,6 @@ jobs:
       - name: Create unsigned MSIX bundle
         shell: pwsh
         run: tools\New-MsixBundle.ps1 -PackageDirectory packages -Version "${{ needs.prepare.outputs.version }}" -OutputPath "artifacts\publish\release\SnapView-${{ needs.prepare.outputs.version }}.msixbundle"
-
-      - name: Archive MSIX bundle
-        uses: actions/upload-artifact@v7
-        with:
-          name: snapview-msix-bundle
-          path: artifacts\publish\release\*.msixbundle
-          if-no-files-found: error
-
-  build-and-sign:
-    needs: prepare
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: windows-latest
-    environment: artifact-signing
-    permissions:
-      contents: read
-      id-token: write
-    strategy:
-      fail-fast: true
-      matrix:
-        platform: ${{ fromJSON(needs.prepare.outputs.platforms) }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - uses: ./.github/actions/setup-windows-build
-        with:
-          platform: ${{ matrix.platform }}
-
-      - name: Build executable
-        shell: pwsh
-        run: msbuild SnapView\SnapView.vcxproj /restore /m /p:Configuration=Release /p:Platform=${{ matrix.platform }} "/p:SolutionDir=${{ github.workspace }}\" "/p:Version=${{ needs.prepare.outputs.version }}"
-
-      - id: executable
-        name: Resolve executable path
-        shell: pwsh
-        run: |
-          $architecture = "${{ matrix.platform }}".ToLowerInvariant()
-          "path=${{ github.workspace }}\artifacts\bin\SnapView\release-$architecture\SnapView.exe" >> $env:GITHUB_OUTPUT
-
-      - name: Sign in to Azure
-        uses: azure/login@v3
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Sign executable
-        uses: azure/artifact-signing-action@v2
-        with:
-          endpoint: ${{ vars.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
-          signing-account-name: ${{ vars.AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME }}
-          certificate-profile-name: ${{ vars.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME }}
-          files: ${{ steps.executable.outputs.path }}
-          file-digest: SHA256
-          timestamp-rfc3161: http://timestamp.acs.microsoft.com
-          timestamp-digest: SHA256
-          exclude-environment-credential: true
-          exclude-workload-identity-credential: true
-          exclude-managed-identity-credential: true
-          exclude-shared-token-cache-credential: true
-          exclude-visual-studio-credential: true
-          exclude-visual-studio-code-credential: true
-          exclude-azure-cli-credential: false
-          exclude-azure-powershell-credential: true
-          exclude-azure-developer-cli-credential: true
-          exclude-interactive-browser-credential: true
-
-      - name: Validate MSIX publisher
-        shell: pwsh
-        run: |
-          if ([string]::IsNullOrWhiteSpace("${{ vars.MSIX_PACKAGE_PUBLISHER }}")) {
-            throw "The artifact-signing environment must define MSIX_PACKAGE_PUBLISHER."
-          }
-
-      - name: Build MSIX package
-        shell: pwsh
-        run: |
-          $env:MSIXPackagePublisher = '${{ vars.MSIX_PACKAGE_PUBLISHER }}'
-          msbuild SnapViewPackage\SnapViewPackage.wapproj /restore /m /p:Configuration=Release /p:Platform=${{ matrix.platform }} /p:BuildProjectReferences=false "/p:SolutionDir=${{ github.workspace }}\" "/p:Version=${{ needs.prepare.outputs.version }}"
-
-      - name: Sign MSIX package
-        uses: azure/artifact-signing-action@v2
-        with:
-          endpoint: ${{ vars.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
-          signing-account-name: ${{ vars.AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME }}
-          certificate-profile-name: ${{ vars.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME }}
-          files-folder: ${{ github.workspace }}\artifacts\publish\release
-          files-folder-filter: '*.msix'
-          files-folder-recurse: true
-          file-digest: SHA256
-          timestamp-rfc3161: http://timestamp.acs.microsoft.com
-          timestamp-digest: SHA256
-          exclude-environment-credential: true
-          exclude-workload-identity-credential: true
-          exclude-managed-identity-credential: true
-          exclude-shared-token-cache-credential: true
-          exclude-visual-studio-credential: true
-          exclude-visual-studio-code-credential: true
-          exclude-azure-cli-credential: false
-          exclude-azure-powershell-credential: true
-          exclude-azure-developer-cli-credential: true
-          exclude-interactive-browser-credential: true
-
-      - name: Validate signed MSIX package
-        shell: pwsh
-        run: |
-          $packages = @(Get-ChildItem -Path artifacts\publish\release -Recurse -File -Filter '*.msix')
-          if ($packages.Count -ne 1) {
-            throw "Expected exactly one MSIX package, but found $($packages.Count)."
-          }
-          $package = $packages[0]
-          tools\Test-MsixPackage.ps1 -PackagePath $package.FullName -ExpectedPublisher '${{ vars.MSIX_PACKAGE_PUBLISHER }}' -RequireSignature
-
-      - uses: ./.github/actions/archive-msix-artifacts
-        with:
-          platform: ${{ matrix.platform }}
-          include-runtime-payload: 'true'
-
-  bundle-and-sign:
-    needs: [prepare, build-and-sign]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: windows-latest
-    environment: artifact-signing
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Download signed MSIX packages
-        uses: actions/download-artifact@v8
-        with:
-          pattern: snapview-msix-*
-          path: packages
-
-      - name: Create MSIX bundle
-        shell: pwsh
-        run: tools\New-MsixBundle.ps1 -PackageDirectory packages -Version "${{ needs.prepare.outputs.version }}" -OutputPath "artifacts\publish\release\SnapView-${{ needs.prepare.outputs.version }}.msixbundle"
-
-      - name: Sign in to Azure
-        uses: azure/login@v3
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Sign MSIX bundle
-        uses: azure/artifact-signing-action@v2
-        with:
-          endpoint: ${{ vars.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
-          signing-account-name: ${{ vars.AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME }}
-          certificate-profile-name: ${{ vars.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME }}
-          files-folder: ${{ github.workspace }}\artifacts\publish\release
-          files-folder-filter: '*.msixbundle'
-          files-folder-recurse: true
-          file-digest: SHA256
-          timestamp-rfc3161: http://timestamp.acs.microsoft.com
-          timestamp-digest: SHA256
-          exclude-environment-credential: true
-          exclude-workload-identity-credential: true
-          exclude-managed-identity-credential: true
-          exclude-shared-token-cache-credential: true
-          exclude-visual-studio-credential: true
-          exclude-visual-studio-code-credential: true
-          exclude-azure-cli-credential: false
-          exclude-azure-powershell-credential: true
-          exclude-azure-developer-cli-credential: true
-          exclude-interactive-browser-credential: true
 
       - name: Archive MSIX bundle
         uses: actions/upload-artifact@v7

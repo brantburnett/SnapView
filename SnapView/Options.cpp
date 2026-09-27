@@ -4,6 +4,7 @@
 #include "CaptureBox.h"
 #include "SnapViewBase.h"
 
+#include <appmodel.h>
 #include <string>
 
 #define SETTINGS_MAXHISTORY			L"MaxHistory"
@@ -21,6 +22,12 @@ INT_PTR OptionsDialogProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 namespace
 {
     bool settingsStoreAvailable = true;
+
+    bool HasPackageIdentity()
+    {
+        UINT32 packageFullNameLength = 0;
+        return GetCurrentPackageFullName(&packageFullNameLength, nullptr) == ERROR_INSUFFICIENT_BUFFER;
+    }
 
     bool TryGetInt32(
         const winrt::Windows::Foundation::Collections::IPropertySet& values,
@@ -83,6 +90,12 @@ void LoadOptions()
 {
     SetDefaultOptions(&options);
     settingsStoreAvailable = true;
+
+    if (!HasPackageIdentity())
+    {
+        settingsStoreAvailable = false;
+        return;
+    }
 
     try
     {

@@ -73,10 +73,10 @@
   </ItemGroup>
   <Import Project="$(WapProjPath)\Microsoft.DesktopBridge.targets" />
   <Target Name="GeneratePackageManifest" BeforeTargets="_ValidatePresenceOfAppxManifestItems;_CopyCurrentProjectAppxManifestOverride">
-    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\tools\Update-MsixPackageManifest.ps1&quot; -SourcePath &quot;$(MSBuildThisFileDirectory)Package.appxmanifest&quot; -DestinationPath &quot;$(IntermediateOutputPath)Package.appxmanifest&quot; -Name &quot;$(MSIXPackageIdentityName)&quot; -Publisher &quot;$(MSIXPackagePublisher)&quot; -Version &quot;$(MSIXPackageVersion)&quot; -Architecture &quot;$(Platform)&quot;" />
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\tools\Update-MsixPackageManifest.ps1&quot; -SourcePath &quot;$(MSBuildThisFileDirectory)Package.appxmanifest&quot; -DestinationPath &quot;$(IntermediateOutputPath)Package.appxmanifest&quot; -Name &quot;$(MSIXPackageIdentityName)&quot; -Publisher &quot;$(MSIXPackagePublisher)&quot; -PublisherDisplayName &quot;$(MSIXPackagePublisherDisplayName)&quot; -Version &quot;$(MSIXPackageVersion)&quot; -Architecture &quot;$(Platform)&quot;" />
   </Target>
   <Target Name="NormalizePackageDependencies" BeforeTargets="_GenerateAppxPackageRecipeFile" DependsOnTargets="GeneratePackageManifest">
-    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\tools\Update-MsixPackageManifest.ps1&quot; -SourcePath &quot;$(FinalAppxManifestName)&quot; -DestinationPath &quot;$(FinalAppxManifestName)&quot; -Name &quot;$(MSIXPackageIdentityName)&quot; -Publisher &quot;$(MSIXPackagePublisher)&quot; -Version &quot;$(MSIXPackageVersion)&quot; -Architecture &quot;$(Platform)&quot; -RemovePackageDependencies" />
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\tools\Update-MsixPackageManifest.ps1&quot; -SourcePath &quot;$(FinalAppxManifestName)&quot; -DestinationPath &quot;$(FinalAppxManifestName)&quot; -Name &quot;$(MSIXPackageIdentityName)&quot; -Publisher &quot;$(MSIXPackagePublisher)&quot; -PublisherDisplayName &quot;$(MSIXPackagePublisherDisplayName)&quot; -Version &quot;$(MSIXPackageVersion)&quot; -Architecture &quot;$(Platform)&quot; -RemovePackageDependencies" />
   </Target>
   <Target Name="IncludeSnapViewPayload" BeforeTargets="_ConvertItems">
     <ItemGroup>

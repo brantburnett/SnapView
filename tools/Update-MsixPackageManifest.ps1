@@ -13,6 +13,9 @@ param(
     [string]$Publisher,
 
     [Parameter(Mandatory)]
+    [string]$PublisherDisplayName,
+
+    [Parameter(Mandatory)]
     [string]$Version,
 
     [Parameter(Mandatory)]
@@ -31,14 +34,25 @@ if ($Version -notmatch '^\d{1,5}\.\d{1,5}\.\d{1,5}\.\d{1,5}$') {
 $namespaceManager = [System.Xml.XmlNamespaceManager]::new($manifest.NameTable)
 $namespaceManager.AddNamespace('appx', 'http://schemas.microsoft.com/appx/manifest/foundation/windows10')
 $identity = $manifest.SelectSingleNode('/appx:Package/appx:Identity', $namespaceManager)
+$properties = $manifest.SelectSingleNode('/appx:Package/appx:Properties', $namespaceManager)
 
 if ($null -eq $identity) {
     throw "No package identity was found in '$SourcePath'."
 }
 
+if ($null -eq $properties) {
+    throw "No package properties were found in '$SourcePath'."
+}
+
+$publisherDisplayNameElement = $properties.SelectSingleNode('appx:PublisherDisplayName', $namespaceManager)
+if ($null -eq $publisherDisplayNameElement) {
+    throw "No package publisher display name was found in '$SourcePath'."
+}
+
 $identity.SetAttribute('Name', $Name)
 $identity.SetAttribute('Publisher', $Publisher)
 $identity.SetAttribute('Version', $Version)
+$publisherDisplayNameElement.InnerText = $PublisherDisplayName
 $architecture = $Architecture.ToLowerInvariant()
 if ($architecture -notin @('arm64', 'x64')) {
     throw "MSIX architecture '$Architecture' is not supported."

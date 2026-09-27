@@ -14,7 +14,6 @@
 #include <string>
 
 using namespace Gdiplus;
-using namespace xercesc;
 
 #define MAX_LOADSTRING 100
 
@@ -84,28 +83,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     RegisterCaptureBoxClass(hInstance);
     InitSizeMarks(hInstance);
 
-    try
-    {
-        XMLPlatformUtils::Initialize();
-    }
-    catch (const XMLException& toCatch)
-    {
-        std::wstring message;
-        for (const XMLCh* character = toCatch.getMessage(); *character; ++character)
-        {
-            message.push_back(static_cast<wchar_t>(*character));
-        }
-
-        MessageBoxW(NULL, message.c_str(), L"XML Error", MB_OK | MB_ICONERROR);
-        ShutdownSizeMarks();
-        CleanupCaptureBoxResources();
-        GdiplusShutdown(gdiplusToken);
-        CleanupShare();
-        RoUninitialize();
-        OleUninitialize();
-        return 1;
-    }
-
     LoadOptions();
 
     // Perform application initialization:
@@ -115,7 +92,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         ShutdownSizeMarks();
         CleanupCaptureBoxResources();
         GdiplusShutdown(gdiplusToken);
-        XMLPlatformUtils::Terminate();
         CleanupShare();
         RoUninitialize();
         OleUninitialize();
@@ -155,8 +131,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     ShutdownSizeMarks();
     CleanupCaptureBoxResources();
     GdiplusShutdown(gdiplusToken);
-
-    XMLPlatformUtils::Terminate();
 
     CleanupShare();
     RoUninitialize();

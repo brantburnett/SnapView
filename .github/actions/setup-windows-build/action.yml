@@ -1,21 +1,7 @@
 name: Set up Windows build
-description: Installs the pinned vcpkg toolchain, MSBuild, and the requested native dependencies.
-
-inputs:
-  platform:
-    description: Build platform, such as x64 or ARM64.
-    required: true
+description: Installs MSBuild for native Windows builds.
 
 runs:
   using: composite
   steps:
-    - uses: lukka/run-vcpkg@b1a0dd252f06b9e25b3c022a9a03bd7a427fb6a2 # v11
-      with:
-        runVcpkgInstall: false
-        vcpkgGitCommitId: 0899c338be35b23b6c394b13ecef4fb1abe1cdfb
-
     - uses: microsoft/setup-msbuild@v3
-
-    - name: Restore vcpkg dependencies
-      shell: pwsh
-      run: vcpkg install --triplet "$("${{ inputs.platform }}".ToLowerInvariant())-windows-static"

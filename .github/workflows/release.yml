@@ -50,8 +50,6 @@ jobs:
           fetch-depth: 0
 
       - uses: ./.github/actions/setup-windows-build
-        with:
-          platform: ${{ matrix.platform }}
 
       - name: Validate Store package publisher
         shell: pwsh

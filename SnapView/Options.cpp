@@ -4,20 +4,14 @@
 #include "CaptureBox.h"
 #include "SnapViewBase.h"
 
+#include <appmodel.h>
 #include <string>
 
-using namespace xercesc;
-
-#define SETTINGS_FILENAME	_T("SnapViewSettings")
-#define SETTINGS_EXTENSION	_T(".xml")
-
-#define SETTINGS_NAMESPACE			TEXT("http://www.snapview.com/settings/2009")
-#define SETTINGS_ROOT				TEXT("SnapView")
-#define SETTINGS_MAXHISTORY			TEXT("MaxHistory")
-#define SETTINGS_QUICKSAVEPATH		TEXT("QuickSavePath")
-#define SETTINGS_DEFAULTSAVETYPE	TEXT("DefaultSaveType")
-#define SETTINGS_HIDEONNEWSNAP		TEXT("HideOnNewSnap")
-#define SETTINGS_SHOWHOVERINFO		TEXT("ShowHoverInfo")
+#define SETTINGS_MAXHISTORY			L"MaxHistory"
+#define SETTINGS_QUICKSAVEPATH		L"QuickSavePath"
+#define SETTINGS_DEFAULTSAVETYPE	L"DefaultSaveType"
+#define SETTINGS_HIDEONNEWSNAP		L"HideOnNewSnap"
+#define SETTINGS_SHOWHOVERINFO		L"ShowHoverInfo"
 
 #define MAXHISTORYWNDPROC_SETTING	_T("MaxHistoryWndProc")
 
@@ -27,84 +21,58 @@ INT_PTR OptionsDialogProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 namespace
 {
-    class XmlString
+    bool settingsStoreAvailable = true;
+
+    bool HasPackageIdentity()
     {
-    public:
-        explicit XmlString(const wchar_t* value)
-        {
-            while (*value)
-            {
-                value_.push_back(static_cast<XMLCh>(*value++));
-            }
-        }
-
-        const XMLCh* c_str() const
-        {
-            return value_.c_str();
-        }
-
-    private:
-        std::basic_string<XMLCh> value_;
-    };
-
-    std::wstring ToWideString(const XMLCh* value)
-    {
-        std::wstring result;
-        if (!value)
-        {
-            return result;
-        }
-
-        while (*value)
-        {
-            result.push_back(static_cast<wchar_t>(*value++));
-        }
-
-        return result;
+        UINT32 packageFullNameLength = 0;
+        return GetCurrentPackageFullName(&packageFullNameLength, nullptr) == ERROR_INSUFFICIENT_BUFFER;
     }
 
-    bool XmlEquals(const XMLCh* value, const wchar_t* expected)
+    bool TryGetInt32(
+        const winrt::Windows::Foundation::Collections::IPropertySet& values,
+        const wchar_t* key,
+        int32_t& result)
     {
-        if (!value)
+        const auto value = values.TryLookup(key).try_as<winrt::Windows::Foundation::IPropertyValue>();
+        if (!value || value.Type() != winrt::Windows::Foundation::PropertyType::Int32)
         {
             return false;
         }
 
-        XmlString expectedValue(expected);
-        return XMLString::equals(value, expectedValue.c_str());
+        result = value.GetInt32();
+        return true;
     }
-}
 
-bool GetSettingsFileName(LPTSTR szPath, bool createFolder)
-{
-    GetModuleFileName(NULL, szPath, MAX_PATH);
-
-    TCHAR szDrive[_MAX_DRIVE], szDir[_MAX_DIR];
-    _tsplitpath_s(szPath, szDrive, _MAX_DRIVE, szDir, _MAX_DIR, NULL, 0, NULL, 0);
-
-    _tmakepath_s(szPath, MAX_PATH, szDrive, szDir, SETTINGS_FILENAME, SETTINGS_EXTENSION);
-
-    if (_taccess(szPath, 0))
+    bool TryGetBoolean(
+        const winrt::Windows::Foundation::Collections::IPropertySet& values,
+        const wchar_t* key,
+        bool& result)
     {
-        if (!SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, szPath)))
+        const auto value = values.TryLookup(key).try_as<winrt::Windows::Foundation::IPropertyValue>();
+        if (!value || value.Type() != winrt::Windows::Foundation::PropertyType::Boolean)
+        {
             return false;
+        }
 
-        size_t i = _tcslen(szPath)-1;
-        if (szPath[i] == _T('\\'))
-            szPath[i] = _T('\0');
-
-        _tcscat_s(szPath, MAX_PATH, _T("\\BurnettSoft"));
-        if (createFolder && _taccess(szPath, 0))
-            if (_tmkdir(szPath)) return false;
-
-        _tcscat_s(szPath, MAX_PATH, _T("\\SnapView"));
-        if (createFolder && _taccess(szPath, 0))
-            if (_tmkdir(szPath)) return false;
-
-        _tcscat_s(szPath, MAX_PATH, _T("\\SnapViewSettings.xml"));
+        result = value.GetBoolean();
+        return true;
     }
 
-    return true;
+    bool TryGetString(
+        const winrt::Windows::Foundation::Collections::IPropertySet& values,
+        const wchar_t* key,
+        winrt::hstring& result)
+    {
+        const auto value = values.TryLookup(key).try_as<winrt::Windows::Foundation::IPropertyValue>();
+        if (!value || value.Type() != winrt::Windows::Foundation::PropertyType::String)
+        {
+            return false;
+        }
+
+        result = value.GetString();
+        return true;
+    }
 }
 
 void SetDefaultOptions(POPTIONS defaults)
@@ -121,170 +89,71 @@ void SetDefaultOptions(POPTIONS defaults)
 void LoadOptions()
 {
     SetDefaultOptions(&options);
+    settingsStoreAvailable = true;
 
-    TCHAR szPath[MAX_PATH];
-    if (!GetSettingsFileName(szPath, false)) return;
+    if (!HasPackageIdentity())
+    {
+        settingsStoreAvailable = false;
+        return;
+    }
 
-    XercesDOMParser* parser = new XercesDOMParser();
-    parser->setDoNamespaces(true);
-
-    ErrorHandler* errHandler = (ErrorHandler*) new HandlerBase();
-    parser->setErrorHandler(errHandler);
-
-    try {
-        XmlString settingsPath(szPath);
-        parser->parse(settingsPath.c_str());
-
-        xercesc::DOMDocument* doc = parser->getDocument();
-        DOMElement* root = doc->getDocumentElement();
-
-        if (!XmlEquals(root->getNamespaceURI(), SETTINGS_NAMESPACE))
-            return;
-
-        if (!XmlEquals(root->getLocalName(), SETTINGS_ROOT))
-            return;
-
-        DOMNode* child = root->getFirstChild();
-        while (child)
+    try
+    {
+        const auto values = winrt::Windows::Storage::ApplicationData::Current().LocalSettings().Values();
+        int32_t value;
+        if (TryGetInt32(values, SETTINGS_MAXHISTORY, value))
         {
-            if (child->getNodeType() == DOMNode::ELEMENT_NODE)
-            {
-                DOMElement *element = (DOMElement*)child;
-                if (XmlEquals(element->getNamespaceURI(), SETTINGS_NAMESPACE))
-                {
-                    const std::wstring value = ToWideString(element->getTextContent());
-
-                    if (XmlEquals(element->getLocalName(), SETTINGS_MAXHISTORY))
-                    {
-                        options.maxHistory = _wtoi(value.c_str());
-
-                        if (options.maxHistory > MAX_CAPTURE_HISTORY)
-                            options.maxHistory = MAX_CAPTURE_HISTORY;
-                        else if (options.maxHistory < 0)
-                            options.maxHistory = 0;
-                    }
-                    else if (XmlEquals(element->getLocalName(), SETTINGS_QUICKSAVEPATH))
-                    {
-                        wcscpy_s(options.quickSavePath, MAX_PATH, value.c_str());
-                    }
-                    else if (XmlEquals(element->getLocalName(), SETTINGS_DEFAULTSAVETYPE))
-                    {
-                        options.defaultSaveType = _wtoi(value.c_str());
-
-                        if (options.defaultSaveType > 4)
-                            options.defaultSaveType = 1;
-                        else if (options.maxHistory < 1)
-                            options.defaultSaveType = 1;
-                    }
-                    else if (XmlEquals(element->getLocalName(), SETTINGS_HIDEONNEWSNAP))
-                    {
-                        options.hideOnNewSnap = _wtoi(value.c_str()) != 0;
-                    }
-                    else if (XmlEquals(element->getLocalName(), SETTINGS_SHOWHOVERINFO))
-                    {
-                        options.showHoverInfo = _wtoi(value.c_str()) != 0;
-                    }
-                }
-            }
-
-            child = child->getNextSibling();
+            if (value > MAX_CAPTURE_HISTORY)
+                options.maxHistory = MAX_CAPTURE_HISTORY;
+            else if (value >= 0)
+                options.maxHistory = value;
         }
+
+        winrt::hstring quickSavePath;
+        if (TryGetString(values, SETTINGS_QUICKSAVEPATH, quickSavePath) &&
+            quickSavePath.size() < MAX_PATH)
+        {
+            wcscpy_s(options.quickSavePath, MAX_PATH, quickSavePath.c_str());
+        }
+
+        if (TryGetInt32(values, SETTINGS_DEFAULTSAVETYPE, value))
+        {
+            options.defaultSaveType = value >= SAVETYPE_PNG && value <= SAVETYPE_JPEG
+                ? value
+                : SAVETYPE_PNG;
+        }
+
+        bool boolValue;
+        if (TryGetBoolean(values, SETTINGS_HIDEONNEWSNAP, boolValue))
+            options.hideOnNewSnap = boolValue;
+
+        if (TryGetBoolean(values, SETTINGS_SHOWHOVERINFO, boolValue))
+            options.showHoverInfo = boolValue;
     }
-    catch (...) {
+    catch (const winrt::hresult_error&)
+    {
+        settingsStoreAvailable = false;
     }
-
-    delete parser;
-    delete errHandler;
-}
-
- int serializeDOM(DOMImplementation* impl, DOMNode* node, LPTSTR szFilename)
- {
-    DOMLSSerializer* theSerializer = ((DOMImplementationLS*)impl)->createLSSerializer();
-
-    if (theSerializer->getDomConfig()->canSetParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true))
-         theSerializer->getDomConfig()->setParameter(XMLUni::fgDOMWRTFormatPrettyPrint, true);
-
-    XmlString filename(szFilename);
-    XMLFormatTarget *myFormTarget = new LocalFileFormatTarget(filename.c_str());
-    DOMLSOutput* theOutput = ((DOMImplementationLS*)impl)->createLSOutput();
-    theOutput->setByteStream(myFormTarget);
-
-    try {
-        // do the serialization through DOMLSSerializer::write();
-        theSerializer->write(node, theOutput);
-    }
-    catch (...) {
-        theOutput->release();
-        theSerializer->release();
-        delete myFormTarget;
-        return -1;
-    }
-
-    theOutput->release();
-    theSerializer->release();
-    delete myFormTarget;
-    return 0;
 }
 
 bool SaveOptions(const POPTIONS newOptions)
 {
-    TCHAR szPath[MAX_PATH];
-    if (!GetSettingsFileName(szPath, true)) return false;
-
-    XmlString ls(L"LS");
-    XmlString settingsNamespace(SETTINGS_NAMESPACE);
-    XmlString settingsRoot(SETTINGS_ROOT);
-    XmlString xmlVersion(L"1.0");
-    DOMImplementation* impl = DOMImplementationRegistry::getDOMImplementation(ls.c_str());
-    xercesc::DOMDocument* doc = impl->createDocument(
-        settingsNamespace.c_str(),
-        settingsRoot.c_str(),
-        NULL);
+    if (!settingsStoreAvailable)
+        return false;
 
     try
     {
-        doc->setXmlVersion(xmlVersion.c_str());
-
-        DOMElement* rootNode = doc->getDocumentElement();
-
-        const auto appendElement = [doc, rootNode, &settingsNamespace](
-            const wchar_t* name,
-            const wchar_t* value)
-        {
-            XmlString xmlName(name);
-            XmlString xmlValue(value);
-            DOMElement* element = doc->createElementNS(
-                settingsNamespace.c_str(),
-                xmlName.c_str());
-            element->setTextContent(xmlValue.c_str());
-            rootNode->appendChild(element);
-        };
-
-        const std::wstring maxHistory = std::to_wstring(newOptions->maxHistory);
-        appendElement(SETTINGS_MAXHISTORY, maxHistory.c_str());
-        appendElement(SETTINGS_QUICKSAVEPATH, newOptions->quickSavePath);
-
-        const std::wstring defaultSaveType = std::to_wstring(newOptions->defaultSaveType);
-        appendElement(SETTINGS_DEFAULTSAVETYPE, defaultSaveType.c_str());
-        appendElement(SETTINGS_HIDEONNEWSNAP, newOptions->hideOnNewSnap ? L"1" : L"0");
-        appendElement(SETTINGS_SHOWHOVERINFO, newOptions->showHoverInfo ? L"1" : L"0");
-
-        if (serializeDOM(impl, doc, szPath))
-        {
-            doc->release();
-            //delete impl;
-            return false;
-        }
+        const auto values = winrt::Windows::Storage::ApplicationData::Current().LocalSettings().Values();
+        values.Insert(SETTINGS_MAXHISTORY, winrt::box_value(newOptions->maxHistory));
+        values.Insert(SETTINGS_QUICKSAVEPATH, winrt::box_value(winrt::hstring(newOptions->quickSavePath)));
+        values.Insert(SETTINGS_DEFAULTSAVETYPE, winrt::box_value(newOptions->defaultSaveType));
+        values.Insert(SETTINGS_HIDEONNEWSNAP, winrt::box_value(newOptions->hideOnNewSnap));
+        values.Insert(SETTINGS_SHOWHOVERINFO, winrt::box_value(newOptions->showHoverInfo));
     }
-    catch (...)
+    catch (const winrt::hresult_error&)
     {
-        doc->release();
-        //delete impl;
         return false;
     }
-
-    doc->release();
-    //delete impl;
 
     options = *newOptions;
     TrimCaptureHistory(options.maxHistory);
@@ -426,6 +295,16 @@ void InitOptionsDialog(HWND hDlg)
 
 INT_PTR ShowOptionsDialog(HWND hWnd)
 {
+    if (!settingsStoreAvailable)
+    {
+        MessageBox(
+            hWnd,
+            _T("Settings are unavailable when SnapView is run outside an installed MSIX package.\n\nInstall the MSIX package to view or change settings."),
+            _T("Settings Unavailable"),
+            MB_OK | MB_ICONERROR);
+        return -1;
+    }
+
     return DialogBox(hInst, MAKEINTRESOURCE(IDD_OPTIONS), hWnd, (DLGPROC)&OptionsDialogProc);
 }
 

@@ -14,6 +14,7 @@
 #define SETTINGS_SHOWHOVERINFO		L"ShowHoverInfo"
 
 #define MAXHISTORYWNDPROC_SETTING	_T("MaxHistoryWndProc")
+#define STARTUP_TASK_ID				L"SnapViewStartupTask"
 
 OPTIONS options;
 
@@ -72,6 +73,89 @@ namespace
 
         result = value.GetString();
         return true;
+    }
+
+    void SetStartupTaskUnavailable(HWND hDlg, const wchar_t* message)
+    {
+        CheckDlgButton(hDlg, IDC_STARTWITHWINDOWS, BST_UNCHECKED);
+        EnableWindow(GetDlgItem(hDlg, IDC_STARTWITHWINDOWS), FALSE);
+        SetDlgItemText(hDlg, IDC_STARTUPTASKSTATUS, message);
+    }
+
+    void SetStartupTaskState(
+        HWND hDlg,
+        winrt::Windows::ApplicationModel::StartupTaskState state)
+    {
+        switch (state)
+        {
+        case winrt::Windows::ApplicationModel::StartupTaskState::Enabled:
+            CheckDlgButton(hDlg, IDC_STARTWITHWINDOWS, BST_CHECKED);
+            EnableWindow(GetDlgItem(hDlg, IDC_STARTWITHWINDOWS), TRUE);
+            SetDlgItemText(hDlg, IDC_STARTUPTASKSTATUS, _T("SnapView will start when you sign in."));
+            break;
+
+        case winrt::Windows::ApplicationModel::StartupTaskState::Disabled:
+            CheckDlgButton(hDlg, IDC_STARTWITHWINDOWS, BST_UNCHECKED);
+            EnableWindow(GetDlgItem(hDlg, IDC_STARTWITHWINDOWS), TRUE);
+            SetDlgItemText(hDlg, IDC_STARTUPTASKSTATUS, _T("SnapView will not start when you sign in."));
+            break;
+
+        case winrt::Windows::ApplicationModel::StartupTaskState::DisabledByUser:
+            SetStartupTaskUnavailable(
+                hDlg,
+                _T("Startup was disabled in Windows. Re-enable SnapView in Task Manager's Startup apps tab or Settings > Apps > Startup."));
+            break;
+
+        case winrt::Windows::ApplicationModel::StartupTaskState::DisabledByPolicy:
+            SetStartupTaskUnavailable(
+                hDlg,
+                _T("Startup is disabled by your organization. Contact your administrator to change it."));
+            break;
+
+        case winrt::Windows::ApplicationModel::StartupTaskState::EnabledByPolicy:
+            CheckDlgButton(hDlg, IDC_STARTWITHWINDOWS, BST_CHECKED);
+            EnableWindow(GetDlgItem(hDlg, IDC_STARTWITHWINDOWS), FALSE);
+            SetDlgItemText(
+                hDlg,
+                IDC_STARTUPTASKSTATUS,
+                _T("Startup is enabled by your organization and cannot be changed here."));
+            break;
+
+        default:
+            SetStartupTaskUnavailable(hDlg, _T("The startup task is unavailable. Reinstall the SnapView MSIX package."));
+            break;
+        }
+    }
+
+    void RefreshStartupTaskControls(HWND hDlg)
+    {
+        try
+        {
+            const auto startupTask = winrt::Windows::ApplicationModel::StartupTask::GetAsync(STARTUP_TASK_ID).get();
+            SetStartupTaskState(hDlg, startupTask.State());
+        }
+        catch (const winrt::hresult_error&)
+        {
+            SetStartupTaskUnavailable(hDlg, _T("The startup task is unavailable. Reinstall the SnapView MSIX package."));
+        }
+    }
+
+    void UpdateStartupTask(HWND hDlg)
+    {
+        try
+        {
+            const auto startupTask = winrt::Windows::ApplicationModel::StartupTask::GetAsync(STARTUP_TASK_ID).get();
+            if (IsDlgButtonChecked(hDlg, IDC_STARTWITHWINDOWS) == BST_CHECKED)
+                startupTask.RequestEnableAsync().get();
+            else
+                startupTask.Disable();
+
+            SetStartupTaskState(hDlg, startupTask.State());
+        }
+        catch (const winrt::hresult_error&)
+        {
+            SetStartupTaskUnavailable(hDlg, _T("SnapView could not update the startup setting. Try again after reinstalling the MSIX package."));
+        }
     }
 }
 
@@ -291,6 +375,7 @@ void InitOptionsDialog(HWND hDlg)
 
     CheckDlgButton(hDlg, IDC_HIDEONNEWSNAP, options.hideOnNewSnap ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(hDlg, IDC_SHOWHOVERINFO, options.showHoverInfo ? BST_CHECKED : BST_UNCHECKED);
+    RefreshStartupTaskControls(hDlg);
 }
 
 INT_PTR ShowOptionsDialog(HWND hWnd)
@@ -360,6 +445,11 @@ INT_PTR OptionsDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             Edit_GetText(hWnd, szFolder, MAX_PATH);
             if (BrowseForFolder(hDlg, szFolder))
                 Edit_SetText(hWnd, szFolder);
+            return (INT_PTR)TRUE;
+        }
+        else if (LOWORD(wParam) == IDC_STARTWITHWINDOWS && HIWORD(wParam) == BN_CLICKED)
+        {
+            UpdateStartupTask(hDlg);
             return (INT_PTR)TRUE;
         }
         break;

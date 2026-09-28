@@ -11,6 +11,8 @@
 #define IDC_HIDEONNEWSNAP               8
 #define IDC_MAXHISTORYUPDWN             9
 #define IDC_SHOWHOVERINFO				10
+#define IDC_STARTWITHWINDOWS             11
+#define IDC_STARTUPTASKSTATUS            12
 #define IDD_SNAPVIEW_DIALOG              102
 #define IDS_APP_TITLE                   103
 #define IDD_ABOUTBOX                    103

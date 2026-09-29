@@ -11,15 +11,18 @@ Unicode Win32 C++ project; its installer is an MSIX packaging project. The solut
 - `SnapViewPackage\SnapViewPackage.wapproj`: MSIX package, built as part of the
   solution
 
-The native project uses the `v145` toolset and the Windows App SDK. Its
-per-user settings are stored in the installed MSIX package's
-`ApplicationData.LocalSettings` store; running the executable outside an MSIX
-package uses in-memory defaults and cannot view or save settings.
+The native project uses the `v145` toolset and the Windows App SDK. Per-user
+settings are stored in the MSIX package's `ApplicationData.LocalSettings`
+store. Visual Studio debugging launches the `SnapViewPackage` project, which
+builds, deploys, and starts SnapView with package identity.
+The package project rebuilds SnapView before staging its payload so the
+debugger never launches an outdated executable.
 
-SnapView remains framework-dependent for the Windows App SDK. The SDK
-bootstrapper initializes before the application's entry point. If the matching
-runtime is missing, Windows displays acquisition UI; the MSIX package does not
-bundle or silently install the runtime.
+SnapView remains framework-dependent for the Windows App SDK. The package
+project declares the framework package dependency. The native project disables
+the unpackaged bootstrapper; Visual Studio package deployment and the MSIX
+framework dependency provide the runtime for local debug and installed
+launches while preserving its static C++ runtime configuration.
 
 ## Prerequisites
 
@@ -52,12 +55,6 @@ For an ARM64 release build:
 
 ```bat
 msbuild SnapView.slnx /restore /m /p:Configuration=Release /p:Platform=ARM64
-```
-
-To build only the executable, which avoids packaging MSIX:
-
-```bat
-msbuild SnapView\SnapView.vcxproj /restore /m /p:Configuration=Debug /p:Platform=x64
 ```
 
 The application is emitted to

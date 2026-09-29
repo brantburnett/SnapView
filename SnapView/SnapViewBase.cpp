@@ -183,6 +183,19 @@ HWND CreateBaseWindow()
     return hWnd;
 }
 
+void ShowOptions()
+{
+    if (hForeWindow != NULL)
+    {
+        SetForegroundWindow(hForeWindow);
+        return;
+    }
+
+    HideAllCaptureBoxes(true);
+    ShowOptionsDialog(hWndApp);
+    ShowAllCaptureBoxes();
+}
+
 LRESULT CALLBACK BaseWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int wmId, wmEvent;
@@ -199,9 +212,7 @@ LRESULT CALLBACK BaseWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
         case IDM_OPTIONS:
-            HideAllCaptureBoxes(true);
-            ShowOptionsDialog(hWndApp);
-            ShowAllCaptureBoxes();
+            ShowOptions();
             break;
         case IDM_EXIT:
             DestroyWindow(hWnd);
@@ -221,6 +232,9 @@ LRESULT CALLBACK BaseWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
         break;
     case WM_NOTIFYICON:
         ParseNotifyIconCommand(hWnd, wParam, lParam);
+        break;
+    case WM_SHOW_OPTIONS:
+        ShowOptions();
         break;
     case WM_DESTROY:
         RemoveTrayIcon(hWnd);

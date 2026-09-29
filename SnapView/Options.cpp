@@ -492,6 +492,7 @@ INT_PTR OptionsDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM)hIconLarge);
 
             hForeWindow = hDlg;
+            SetForegroundWindow(hDlg);
 
             return (INT_PTR)TRUE;
         }

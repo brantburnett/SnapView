@@ -214,6 +214,7 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.1" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ActivationIpc.cpp" />
     <ClCompile Include="CaptureBox.cpp" />
     <ClCompile Include="Share.cpp" />
     <ClCompile Include="Options.cpp" />
@@ -229,6 +230,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ActivationIpc.h" />
     <ClInclude Include="CaptureBox.h" />
     <ClInclude Include="Share.h" />
     <ClInclude Include="LimitSingleInstance.h" />

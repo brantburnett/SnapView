@@ -3,7 +3,8 @@
     <Version Condition="'$(Version)' == ''">0.2.0</Version>
     <VersionCore>$([System.Text.RegularExpressions.Regex]::Match('$(Version)', '^\d+\.\d+\.\d+').Value)</VersionCore>
     <InstallerVersion Condition="'$(VersionCore)' != ''">$(VersionCore)</InstallerVersion>
-    <MSIXPackageVersion Condition="'$(InstallerVersion)' != ''">$(InstallerVersion).0</MSIXPackageVersion>
+    <MSIXPackageVersion Condition="'$(InstallerVersion)' != '' and $([System.Text.RegularExpressions.Regex]::IsMatch('$(InstallerVersion)', '^\d+\.\d+\.\d+\.\d+$'))">$(InstallerVersion)</MSIXPackageVersion>
+    <MSIXPackageVersion Condition="'$(MSIXPackageVersion)' == '' and '$(InstallerVersion)' != ''">$(InstallerVersion).0</MSIXPackageVersion>
     <MSIXPackageIdentityName Condition="'$(MSIXPackageIdentityName)' == '' and '$(MS_STORE_PACKAGE_IDENTITY_NAME)' != ''">$(MS_STORE_PACKAGE_IDENTITY_NAME)</MSIXPackageIdentityName>
     <MSIXPackageIdentityName Condition="'$(MSIXPackageIdentityName)' == ''">SnapView</MSIXPackageIdentityName>
     <MSIXPackagePublisher Condition="'$(MSIXPackagePublisher)' == '' and '$(MS_STORE_PACKAGE_PUBLISHER)' != ''">$(MS_STORE_PACKAGE_PUBLISHER)</MSIXPackagePublisher>

@@ -13,11 +13,15 @@
 #define IDC_SHOWHOVERINFO				10
 #define IDC_STARTWITHWINDOWS             11
 #define IDC_STARTUPTASKSTATUS            12
+#define IDC_ABOUT_VERSION                13
+#define IDC_ABOUT_COPYRIGHT              14
 #define IDD_SNAPVIEW_DIALOG              102
 #define IDS_APP_TITLE                   103
 #define IDD_ABOUTBOX                    103
 #define IDS_FILE_FILTER                 104
 #define IDD_OPTIONS                     104
+#define IDS_ABOUT_VERSION               105
+#define IDS_ABOUT_COPYRIGHT             106
 #define IDI_SNAPVIEW                     107
 #define IDC_SNAPVIEW                     109
 #define IDC_NOTIFYICONMENU              110

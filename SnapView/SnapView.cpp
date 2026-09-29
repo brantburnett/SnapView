@@ -10,6 +10,7 @@
 #include "SnapHook.h"
 #include "SizeMarks.h"
 #include "LimitSingleInstance.h"
+#include "ActivationIpc.h"
 #include <initguid.h>
 #include <string>
 
@@ -39,6 +40,24 @@ ATOM				MyRegisterClass(HINSTANCE hInstance);
 HWND				InitInstance(HINSTANCE, int);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 
+namespace
+{
+    bool IsStartupTaskActivation()
+    {
+        try
+        {
+            const auto activatedEventArgs =
+                winrt::Windows::ApplicationModel::AppInstance::GetActivatedEventArgs();
+            return activatedEventArgs.Kind() ==
+                winrt::Windows::ApplicationModel::Activation::ActivationKind::StartupTask;
+        }
+        catch (const winrt::hresult_error&)
+        {
+            return false;
+        }
+    }
+}
+
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
                      LPTSTR    lpCmdLine,
@@ -46,6 +65,21 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
+
+    if (singleInstance.IsAnotherInstanceRunning())
+    {
+        if (!RequestShowOptionsFromRunningInstance())
+        {
+            MessageBox(
+                NULL,
+                _T("SnapView is already running, but its Options window could not be opened."),
+                _T("SnapView"),
+                MB_ICONERROR | MB_OK);
+            return 1;
+        }
+
+        return 0;
+    }
 
     INITCOMMONCONTROLSEX initCtrls;
     initCtrls.dwSize = sizeof(initCtrls);
@@ -66,6 +100,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         OleUninitialize();
         return 1;
     }
+
+    const bool startupTaskActivation = IsStartupTaskActivation();
 
     GdiplusStartupInput input;
     GdiplusStartup(&gdiplusToken, &input, NULL);
@@ -98,6 +134,23 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         return FALSE;
     }
 
+    if (!StartActivationIpc(hWndApp))
+    {
+        MessageBox(
+            NULL,
+            _T("SnapView could not initialize its activation service."),
+            _T("SnapView"),
+            MB_ICONERROR | MB_OK);
+        DestroyWindow(hWndApp);
+        ShutdownSizeMarks();
+        CleanupCaptureBoxResources();
+        GdiplusShutdown(gdiplusToken);
+        CleanupShare();
+        RoUninitialize();
+        OleUninitialize();
+        return FALSE;
+    }
+
     hNotifyMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDC_NOTIFYICONMENU));
     hCaptureMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDC_CAPTUREMENU));
 
@@ -110,12 +163,17 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
     SnapHookSetHooks();
 
+    if (!startupTaskActivation)
+        ShowOptions();
+
     // Main message loop:
     while (GetMessage(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+
+    StopActivationIpc();
 
     DestroyMenu(hNotifyMenu);
     DestroyMenu(hCaptureMenu);
@@ -328,14 +386,6 @@ void MouseUp(HWND hWnd, POINT p)
 HWND InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     UNREFERENCED_PARAMETER(nCmdShow);
-
-    if (singleInstance.IsAnotherInstanceRunning())
-    {
-#ifdef _DEBUG
-        MessageBox(NULL, _T("Another Instance Is Running"), _T("Error"), MB_OK | MB_ICONERROR);
-#endif
-        return FALSE;
-    }
 
     hInst = hInstance;
 

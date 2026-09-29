@@ -29,5 +29,5 @@ runs:
       uses: actions/upload-artifact@v7
       with:
         name: snapview-msix-${{ inputs.platform }}
-        path: artifacts\publish\release\**\*.msix
+        path: artifacts\publish\release\**\SnapViewPackage_*.msix
         if-no-files-found: error

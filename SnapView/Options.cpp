@@ -4,7 +4,6 @@
 #include "CaptureBox.h"
 #include "SnapViewBase.h"
 
-#include <appmodel.h>
 #include <string>
 
 #define SETTINGS_MAXHISTORY			L"MaxHistory"
@@ -22,14 +21,6 @@ INT_PTR OptionsDialogProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 namespace
 {
-    bool settingsStoreAvailable = true;
-
-    bool HasPackageIdentity()
-    {
-        UINT32 packageFullNameLength = 0;
-        return GetCurrentPackageFullName(&packageFullNameLength, nullptr) == ERROR_INSUFFICIENT_BUFFER;
-    }
-
     bool TryGetInt32(
         const winrt::Windows::Foundation::Collections::IPropertySet& values,
         const wchar_t* key,
@@ -173,58 +164,41 @@ void SetDefaultOptions(POPTIONS defaults)
 void LoadOptions()
 {
     SetDefaultOptions(&options);
-    settingsStoreAvailable = true;
 
-    if (!HasPackageIdentity())
+    const auto values = winrt::Windows::Storage::ApplicationData::Current().LocalSettings().Values();
+    int32_t value;
+    if (TryGetInt32(values, SETTINGS_MAXHISTORY, value))
     {
-        settingsStoreAvailable = false;
-        return;
+        if (value > MAX_CAPTURE_HISTORY)
+            options.maxHistory = MAX_CAPTURE_HISTORY;
+        else if (value >= 0)
+            options.maxHistory = value;
     }
 
-    try
+    winrt::hstring quickSavePath;
+    if (TryGetString(values, SETTINGS_QUICKSAVEPATH, quickSavePath) &&
+        quickSavePath.size() < MAX_PATH)
     {
-        const auto values = winrt::Windows::Storage::ApplicationData::Current().LocalSettings().Values();
-        int32_t value;
-        if (TryGetInt32(values, SETTINGS_MAXHISTORY, value))
-        {
-            if (value > MAX_CAPTURE_HISTORY)
-                options.maxHistory = MAX_CAPTURE_HISTORY;
-            else if (value >= 0)
-                options.maxHistory = value;
-        }
-
-        winrt::hstring quickSavePath;
-        if (TryGetString(values, SETTINGS_QUICKSAVEPATH, quickSavePath) &&
-            quickSavePath.size() < MAX_PATH)
-        {
-            wcscpy_s(options.quickSavePath, MAX_PATH, quickSavePath.c_str());
-        }
-
-        if (TryGetInt32(values, SETTINGS_DEFAULTSAVETYPE, value))
-        {
-            options.defaultSaveType = value >= SAVETYPE_PNG && value <= SAVETYPE_JPEG
-                ? value
-                : SAVETYPE_PNG;
-        }
-
-        bool boolValue;
-        if (TryGetBoolean(values, SETTINGS_HIDEONNEWSNAP, boolValue))
-            options.hideOnNewSnap = boolValue;
-
-        if (TryGetBoolean(values, SETTINGS_SHOWHOVERINFO, boolValue))
-            options.showHoverInfo = boolValue;
+        wcscpy_s(options.quickSavePath, MAX_PATH, quickSavePath.c_str());
     }
-    catch (const winrt::hresult_error&)
+
+    if (TryGetInt32(values, SETTINGS_DEFAULTSAVETYPE, value))
     {
-        settingsStoreAvailable = false;
+        options.defaultSaveType = value >= SAVETYPE_PNG && value <= SAVETYPE_JPEG
+            ? value
+            : SAVETYPE_PNG;
     }
+
+    bool boolValue;
+    if (TryGetBoolean(values, SETTINGS_HIDEONNEWSNAP, boolValue))
+        options.hideOnNewSnap = boolValue;
+
+    if (TryGetBoolean(values, SETTINGS_SHOWHOVERINFO, boolValue))
+        options.showHoverInfo = boolValue;
 }
 
 bool SaveOptions(const POPTIONS newOptions)
 {
-    if (!settingsStoreAvailable)
-        return false;
-
     try
     {
         const auto values = winrt::Windows::Storage::ApplicationData::Current().LocalSettings().Values();
@@ -278,7 +252,13 @@ bool SaveOptionsFromDialog(HWND hDlg)
     newOptions.hideOnNewSnap = IsDlgButtonChecked(hDlg, IDC_HIDEONNEWSNAP) == BST_CHECKED;
     newOptions.showHoverInfo = IsDlgButtonChecked(hDlg, IDC_SHOWHOVERINFO) == BST_CHECKED;
 
-    return SaveOptions(&newOptions);
+    if (!SaveOptions(&newOptions))
+    {
+        ShowOptionError(hDlg, _T("Unable to save settings."));
+        return false;
+    }
+
+    return true;
 }
 
 int CALLBACK BrowseCallbackProc(HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
@@ -380,16 +360,6 @@ void InitOptionsDialog(HWND hDlg)
 
 INT_PTR ShowOptionsDialog(HWND hWnd)
 {
-    if (!settingsStoreAvailable)
-    {
-        MessageBox(
-            hWnd,
-            _T("Settings are unavailable when SnapView is run outside an installed MSIX package.\n\nInstall the MSIX package to view or change settings."),
-            _T("Settings Unavailable"),
-            MB_OK | MB_ICONERROR);
-        return -1;
-    }
-
     return DialogBox(hInst, MAKEINTRESOURCE(IDD_OPTIONS), hWnd, (DLGPROC)&OptionsDialogProc);
 }
 

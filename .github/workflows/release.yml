@@ -107,7 +107,7 @@ jobs:
           MS_STORE_PACKAGE_PUBLISHERDISPLAYNAME: ${{ vars.MS_STORE_PACKAGE_PUBLISHERDISPLAYNAME }}
           INSTALLER_VERSION: ${{ needs.prepare.outputs.installer_version }}
         run: |
-          $packages = @(Get-ChildItem -Path artifacts\publish\release -Recurse -File -Filter '*.msix')
+          $packages = @(Get-ChildItem -Path artifacts\publish\release -Recurse -File -Filter 'SnapViewPackage_*.msix')
           if ($packages.Count -ne 1) {
             throw "Expected exactly one MSIX package, but found $($packages.Count)."
           }

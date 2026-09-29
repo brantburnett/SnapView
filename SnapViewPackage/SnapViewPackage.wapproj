@@ -66,6 +66,11 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.1">
+      <IncludeAssets>build</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\SnapView\SnapView.vcxproj" ReferenceOutputAssembly="false">
       <TreatAsPackageReference>false</TreatAsPackageReference>
       <SkipGetTargetFrameworkProperties>True</SkipGetTargetFrameworkProperties>
@@ -75,8 +80,17 @@
   <Target Name="GeneratePackageManifest" BeforeTargets="_ValidatePresenceOfAppxManifestItems;_CopyCurrentProjectAppxManifestOverride">
     <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\tools\Update-MsixPackageManifest.ps1&quot; -SourcePath &quot;$(MSBuildThisFileDirectory)Package.appxmanifest&quot; -DestinationPath &quot;$(IntermediateOutputPath)Package.appxmanifest&quot; -Name &quot;$(MSIXPackageIdentityName)&quot; -Publisher &quot;$(MSIXPackagePublisher)&quot; -PublisherDisplayName &quot;$(MSIXPackagePublisherDisplayName)&quot; -Version &quot;$(MSIXPackageVersion)&quot; -Architecture &quot;$(Platform)&quot;" />
   </Target>
-  <Target Name="NormalizePackageDependencies" BeforeTargets="_GenerateAppxPackageRecipeFile" DependsOnTargets="GeneratePackageManifest">
-    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\tools\Update-MsixPackageManifest.ps1&quot; -SourcePath &quot;$(FinalAppxManifestName)&quot; -DestinationPath &quot;$(FinalAppxManifestName)&quot; -Name &quot;$(MSIXPackageIdentityName)&quot; -Publisher &quot;$(MSIXPackagePublisher)&quot; -PublisherDisplayName &quot;$(MSIXPackagePublisherDisplayName)&quot; -Version &quot;$(MSIXPackageVersion)&quot; -Architecture &quot;$(Platform)&quot; -RemovePackageDependencies" />
+  <Target Name="BuildSnapViewPayload" BeforeTargets="IncludeSnapViewPayload">
+    <MSBuild
+      Projects="..\SnapView\SnapView.vcxproj"
+      Targets="Build"
+      Properties="Configuration=$(Configuration);Platform=$(Platform)" />
+  </Target>
+  <Target Name="CopySnapViewPayloadForDebug" AfterTargets="_CopyPackageFiles">
+    <Copy
+      SourceFiles="$(SnapViewOutputDirectory)SnapView.exe"
+      DestinationFiles="$(OutputPath)AppX\SnapView.exe"
+      SkipUnchangedFiles="true" />
   </Target>
   <Target Name="IncludeSnapViewPayload" BeforeTargets="_ConvertItems">
     <ItemGroup>

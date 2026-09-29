@@ -19,9 +19,7 @@ param(
     [string]$Version,
 
     [Parameter(Mandatory)]
-    [string]$Architecture,
-
-    [switch]$RemovePackageDependencies
+    [string]$Architecture
 )
 
 $ErrorActionPreference = 'Stop'
@@ -59,14 +57,6 @@ if ($architecture -notin @('arm64', 'x64')) {
 }
 
 $identity.SetAttribute('ProcessorArchitecture', $architecture)
-
-if ($RemovePackageDependencies) {
-    $dependencies = $manifest.SelectSingleNode('/appx:Package/appx:Dependencies', $namespaceManager)
-    if ($null -ne $dependencies) {
-        @($dependencies.SelectNodes('appx:PackageDependency', $namespaceManager)) |
-            ForEach-Object { [void]$dependencies.RemoveChild($_) }
-    }
-}
 
 $destinationDirectory = Split-Path -Parent $DestinationPath
 New-Item -ItemType Directory -Path $destinationDirectory -Force | Out-Null

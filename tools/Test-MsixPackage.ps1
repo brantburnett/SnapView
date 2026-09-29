@@ -7,8 +7,9 @@ param(
 
     [string]$ExpectedPublisher,
 
-    [string]$ExpectedPublisherDisplayName
+    [string]$ExpectedPublisherDisplayName,
 
+    [string]$ExpectedVersion
 )
 
 $ErrorActionPreference = 'Stop'
@@ -52,6 +53,11 @@ try {
     if (-not [string]::IsNullOrWhiteSpace($ExpectedPublisher) -and
         -not [string]::Equals($identity.Publisher, $ExpectedPublisher, [System.StringComparison]::OrdinalIgnoreCase)) {
         throw "Package identity publisher '$($identity.Publisher)' does not match expected publisher '$ExpectedPublisher'."
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($ExpectedVersion) -and
+        -not [string]::Equals($identity.Version, $ExpectedVersion, [System.StringComparison]::Ordinal)) {
+        throw "Package identity version '$($identity.Version)' does not match expected version '$ExpectedVersion'."
     }
 
     if (-not [string]::IsNullOrWhiteSpace($ExpectedPublisherDisplayName) -and

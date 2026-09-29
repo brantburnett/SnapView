@@ -86,6 +86,11 @@ bundles are not published as GitHub release assets.
 Tag pushes matching `v*` or `V*` run the `Release` workflow. Its `publish` job
 uses the `publish` GitHub environment and requires the following configuration:
 
+The tag release workflow derives the MSIX package and bundle version from the
+three-part numeric tag version and appends the GitHub Actions run number as the
+fourth component (for example, `1.0.0-beta.2` on run `15` becomes `1.0.0.15`).
+Local and CI package builds continue to use `0` as that fourth component.
+
 | GitHub location | Name | Value and source |
 | --- | --- | --- |
 | `publish` environment secret | `AZURE_TENANT_ID` | Reuse the existing Microsoft Entra tenant ID. In the Microsoft Entra admin center, open **Identity** > **Overview** and copy **Tenant ID**. |

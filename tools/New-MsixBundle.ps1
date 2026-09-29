@@ -12,12 +12,19 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$versionCore = [System.Text.RegularExpressions.Regex]::Match($Version, '^\d+\.\d+\.\d+').Value
-if ([string]::IsNullOrEmpty($versionCore)) {
-    throw "Version '$Version' must begin with a three-part numeric version."
+$versionMatch = [System.Text.RegularExpressions.Regex]::Match(
+    $Version,
+    '^(?<core>\d+\.\d+\.\d+)(?:\.(?<revision>\d+))?(?:[-+].*)?$')
+if (-not $versionMatch.Success) {
+    throw "Version '$Version' must contain a three-part numeric version with an optional numeric fourth component."
 }
 
-$bundleVersion = "$versionCore.0"
+$bundleVersion = if ($versionMatch.Groups['revision'].Success) {
+    $versionMatch.Value -replace '(?:[-+].*)$', ''
+}
+else {
+    "$($versionMatch.Groups['core'].Value).0"
+}
 $packageDirectory = (Resolve-Path -LiteralPath $PackageDirectory).Path
 $packages = @(Get-ChildItem -LiteralPath $packageDirectory -Recurse -File -Filter '*.msix')
 

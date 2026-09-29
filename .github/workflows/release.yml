@@ -15,6 +15,7 @@ jobs:
     outputs:
       platforms: ${{ steps.platforms.outputs.values }}
       version: ${{ steps.version.outputs.version }}
+      installer_version: ${{ steps.installer_version.outputs.version }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -24,6 +25,24 @@ jobs:
         uses: CenterEdge/actions/dotnet/nuget-version@4f48ad964c672c289002dbb4c1e4a641ba19c771 # main
         with:
           tag-prefix: '[vV]'
+
+      - id: installer_version
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          $versionCore = [System.Text.RegularExpressions.Regex]::Match($env:VERSION, '^\d+\.\d+\.\d+').Value
+          if ([string]::IsNullOrEmpty($versionCore)) {
+            throw "Version '$env:VERSION' must begin with a three-part numeric version."
+          }
+
+          $runNumber = [uint16]0
+          if (-not [uint16]::TryParse($env:RUN_NUMBER, [ref]$runNumber) -or $runNumber -eq 0) {
+            throw "GitHub run number '$env:RUN_NUMBER' is not a valid MSIX version component."
+          }
+
+          "version=$versionCore.$runNumber" >> $env:GITHUB_OUTPUT
 
       - id: platforms
         shell: pwsh
@@ -78,7 +97,7 @@ jobs:
           MS_STORE_PACKAGE_IDENTITY_NAME: ${{ vars.MS_STORE_PACKAGE_IDENTITY_NAME }}
           MS_STORE_PACKAGE_PUBLISHER: ${{ vars.MS_STORE_PACKAGE_PUBLISHER }}
           MS_STORE_PACKAGE_PUBLISHERDISPLAYNAME: ${{ vars.MS_STORE_PACKAGE_PUBLISHERDISPLAYNAME }}
-        run: msbuild SnapViewPackage\SnapViewPackage.wapproj /restore /m /p:Configuration=Release /p:Platform=${{ matrix.platform }} /p:BuildProjectReferences=false "/p:SolutionDir=${{ github.workspace }}\" "/p:Version=${{ needs.prepare.outputs.version }}"
+        run: msbuild SnapViewPackage\SnapViewPackage.wapproj /restore /m /p:Configuration=Release /p:Platform=${{ matrix.platform }} /p:BuildProjectReferences=false "/p:SolutionDir=${{ github.workspace }}\" "/p:Version=${{ needs.prepare.outputs.version }}" "/p:InstallerVersion=${{ needs.prepare.outputs.installer_version }}"
 
       - name: Validate unsigned MSIX package
         shell: pwsh
@@ -86,12 +105,13 @@ jobs:
           MS_STORE_PACKAGE_IDENTITY_NAME: ${{ vars.MS_STORE_PACKAGE_IDENTITY_NAME }}
           MS_STORE_PACKAGE_PUBLISHER: ${{ vars.MS_STORE_PACKAGE_PUBLISHER }}
           MS_STORE_PACKAGE_PUBLISHERDISPLAYNAME: ${{ vars.MS_STORE_PACKAGE_PUBLISHERDISPLAYNAME }}
+          INSTALLER_VERSION: ${{ needs.prepare.outputs.installer_version }}
         run: |
           $packages = @(Get-ChildItem -Path artifacts\publish\release -Recurse -File -Filter '*.msix')
           if ($packages.Count -ne 1) {
             throw "Expected exactly one MSIX package, but found $($packages.Count)."
           }
-          tools\Test-MsixPackage.ps1 -PackagePath $packages[0].FullName -ExpectedIdentityName $env:MS_STORE_PACKAGE_IDENTITY_NAME -ExpectedPublisher $env:MS_STORE_PACKAGE_PUBLISHER -ExpectedPublisherDisplayName $env:MS_STORE_PACKAGE_PUBLISHERDISPLAYNAME
+          tools\Test-MsixPackage.ps1 -PackagePath $packages[0].FullName -ExpectedIdentityName $env:MS_STORE_PACKAGE_IDENTITY_NAME -ExpectedPublisher $env:MS_STORE_PACKAGE_PUBLISHER -ExpectedPublisherDisplayName $env:MS_STORE_PACKAGE_PUBLISHERDISPLAYNAME -ExpectedVersion $env:INSTALLER_VERSION
 
       - uses: ./.github/actions/archive-msix-artifacts
         with:
@@ -115,7 +135,7 @@ jobs:
 
       - name: Create unsigned MSIX bundle
         shell: pwsh
-        run: tools\New-MsixBundle.ps1 -PackageDirectory packages -Version "${{ needs.prepare.outputs.version }}" -OutputPath "artifacts\publish\release\SnapView-${{ needs.prepare.outputs.version }}.msixbundle"
+        run: tools\New-MsixBundle.ps1 -PackageDirectory packages -Version "${{ needs.prepare.outputs.installer_version }}" -OutputPath "artifacts\publish\release\SnapView-${{ needs.prepare.outputs.version }}.msixbundle"
 
       - name: Archive MSIX bundle
         uses: actions/upload-artifact@v7

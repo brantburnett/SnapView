@@ -14,6 +14,7 @@
 
 #define MAXHISTORYWNDPROC_SETTING	_T("MaxHistoryWndProc")
 #define STARTUP_TASK_ID				L"SnapViewStartupTask"
+#define WM_STARTUPTASKRESULT		(WM_APP + 1)
 
 OPTIONS options;
 
@@ -21,6 +22,19 @@ INT_PTR OptionsDialogProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 namespace
 {
+    enum class StartupTaskOperation
+    {
+        Refresh,
+        Update
+    };
+
+    struct StartupTaskResult
+    {
+        StartupTaskOperation operation;
+        winrt::Windows::ApplicationModel::StartupTaskState state;
+        bool succeeded;
+    };
+
     bool TryGetInt32(
         const winrt::Windows::Foundation::Collections::IPropertySet& values,
         const wchar_t* key,
@@ -118,12 +132,53 @@ namespace
         }
     }
 
+    void PostStartupTaskResult(
+        HWND hDlg,
+        StartupTaskOperation operation,
+        bool succeeded,
+        winrt::Windows::ApplicationModel::StartupTaskState state =
+            winrt::Windows::ApplicationModel::StartupTaskState::Disabled)
+    {
+        auto result = std::make_unique<StartupTaskResult>(
+            StartupTaskResult{ operation, state, succeeded });
+        if (PostMessage(hDlg, WM_STARTUPTASKRESULT, 0, reinterpret_cast<LPARAM>(result.get())))
+            result.release();
+    }
+
+    void SetStartupTaskPending(HWND hDlg, const wchar_t* message)
+    {
+        EnableWindow(GetDlgItem(hDlg, IDC_STARTWITHWINDOWS), FALSE);
+        SetDlgItemText(hDlg, IDC_STARTUPTASKSTATUS, message);
+    }
+
     void RefreshStartupTaskControls(HWND hDlg)
     {
+        SetStartupTaskPending(hDlg, _T("Checking startup setting..."));
+
         try
         {
-            const auto startupTask = winrt::Windows::ApplicationModel::StartupTask::GetAsync(STARTUP_TASK_ID).get();
-            SetStartupTaskState(hDlg, startupTask.State());
+            const auto operation = winrt::Windows::ApplicationModel::StartupTask::GetAsync(STARTUP_TASK_ID);
+            operation.Completed(
+                [hDlg](
+                    const winrt::Windows::Foundation::IAsyncOperation<winrt::Windows::ApplicationModel::StartupTask>& operation,
+                    winrt::Windows::Foundation::AsyncStatus status)
+                {
+                    try
+                    {
+                        if (status != winrt::Windows::Foundation::AsyncStatus::Completed)
+                            throw winrt::hresult_error(E_FAIL);
+
+                        PostStartupTaskResult(
+                            hDlg,
+                            StartupTaskOperation::Refresh,
+                            true,
+                            operation.GetResults().State());
+                    }
+                    catch (const winrt::hresult_error&)
+                    {
+                        PostStartupTaskResult(hDlg, StartupTaskOperation::Refresh, false);
+                    }
+                });
         }
         catch (const winrt::hresult_error&)
         {
@@ -133,15 +188,62 @@ namespace
 
     void UpdateStartupTask(HWND hDlg)
     {
+        const bool enableStartup = IsDlgButtonChecked(hDlg, IDC_STARTWITHWINDOWS) == BST_CHECKED;
+        SetStartupTaskPending(hDlg, _T("Updating startup setting..."));
+
         try
         {
-            const auto startupTask = winrt::Windows::ApplicationModel::StartupTask::GetAsync(STARTUP_TASK_ID).get();
-            if (IsDlgButtonChecked(hDlg, IDC_STARTWITHWINDOWS) == BST_CHECKED)
-                startupTask.RequestEnableAsync().get();
-            else
-                startupTask.Disable();
+            const auto operation = winrt::Windows::ApplicationModel::StartupTask::GetAsync(STARTUP_TASK_ID);
+            operation.Completed(
+                [hDlg, enableStartup](
+                    const winrt::Windows::Foundation::IAsyncOperation<winrt::Windows::ApplicationModel::StartupTask>& operation,
+                    winrt::Windows::Foundation::AsyncStatus status)
+                {
+                    try
+                    {
+                        if (status != winrt::Windows::Foundation::AsyncStatus::Completed)
+                            throw winrt::hresult_error(E_FAIL);
 
-            SetStartupTaskState(hDlg, startupTask.State());
+                        const auto startupTask = operation.GetResults();
+                        if (!enableStartup)
+                        {
+                            startupTask.Disable();
+                            PostStartupTaskResult(
+                                hDlg,
+                                StartupTaskOperation::Update,
+                                true,
+                                startupTask.State());
+                            return;
+                        }
+
+                        const auto enableOperation = startupTask.RequestEnableAsync();
+                        enableOperation.Completed(
+                            [hDlg](
+                                const winrt::Windows::Foundation::IAsyncOperation<winrt::Windows::ApplicationModel::StartupTaskState>& operation,
+                                winrt::Windows::Foundation::AsyncStatus status)
+                            {
+                                try
+                                {
+                                    if (status != winrt::Windows::Foundation::AsyncStatus::Completed)
+                                        throw winrt::hresult_error(E_FAIL);
+
+                                    PostStartupTaskResult(
+                                        hDlg,
+                                        StartupTaskOperation::Update,
+                                        true,
+                                        operation.GetResults());
+                                }
+                                catch (const winrt::hresult_error&)
+                                {
+                                    PostStartupTaskResult(hDlg, StartupTaskOperation::Update, false);
+                                }
+                            });
+                    }
+                    catch (const winrt::hresult_error&)
+                    {
+                        PostStartupTaskResult(hDlg, StartupTaskOperation::Update, false);
+                    }
+                });
         }
         catch (const winrt::hresult_error&)
         {
@@ -393,6 +495,29 @@ INT_PTR OptionsDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
             return (INT_PTR)TRUE;
         }
+    case WM_STARTUPTASKRESULT:
+        {
+            std::unique_ptr<StartupTaskResult> result(
+                reinterpret_cast<StartupTaskResult*>(lParam));
+            if (result->succeeded)
+            {
+                SetStartupTaskState(hDlg, result->state);
+            }
+            else if (result->operation == StartupTaskOperation::Refresh)
+            {
+                SetStartupTaskUnavailable(
+                    hDlg,
+                    _T("The startup task is unavailable. Reinstall the SnapView MSIX package."));
+            }
+            else
+            {
+                SetStartupTaskUnavailable(
+                    hDlg,
+                    _T("SnapView could not update the startup setting. Try again after reinstalling the MSIX package."));
+            }
+
+            return (INT_PTR)TRUE;
+        }
     case WM_COMMAND:
         if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
         {
@@ -430,6 +555,17 @@ INT_PTR OptionsDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         PMAXHISTORYDATA maxHistoryData = (PMAXHISTORYDATA)GetProp(hDlg, MAXHISTORYWNDPROC_SETTING);
         delete maxHistoryData;
         RemoveProp(hDlg, MAXHISTORYWNDPROC_SETTING);
+
+        MSG pendingMessage;
+        while (PeekMessage(
+            &pendingMessage,
+            hDlg,
+            WM_STARTUPTASKRESULT,
+            WM_STARTUPTASKRESULT,
+            PM_REMOVE))
+        {
+            delete reinterpret_cast<StartupTaskResult*>(pendingMessage.lParam);
+        }
         break;
     }
 

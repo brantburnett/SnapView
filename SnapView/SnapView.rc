@@ -74,15 +74,15 @@ END
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOGEX 0, 0, 170, 62
+IDD_ABOUTBOX DIALOGEX 0, 0, 256, 78
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About SnapView"
 FONT 8, "Tahoma", 0, 0, 0x1
 BEGIN
-    ICON            128,IDC_STATIC,14,14,21,20
-    LTEXT           "SnapView, Version 1.0",IDC_STATIC,42,14,114,8,SS_NOPREFIX
-    LTEXT           "Copyright (C) 2009",IDC_STATIC,42,26,114,8
-    DEFPUSHBUTTON   "OK",IDOK,113,41,50,14,WS_GROUP
+    ICON            IDI_SNAPVIEW,IDC_STATIC,14,14,32,32
+    LTEXT           "",IDC_ABOUT_VERSION,56,14,190,8,SS_NOPREFIX
+    LTEXT           "",IDC_ABOUT_COPYRIGHT,56,27,190,18
+    DEFPUSHBUTTON   "OK",IDOK,196,57,50,14,WS_GROUP
 END
 
 IDD_OPTIONS DIALOGEX 0, 0, 312, 120
@@ -182,7 +182,7 @@ BEGIN
         BEGIN
             VALUE "FileDescription", "SnapView"
             VALUE "FileVersion", VERSION_STRING
-            VALUE "LegalCopyright", "Copyright (c) 2009 Brant Burnett and Grey Burnett.  All Rights Reserved."
+            VALUE "LegalCopyright", "Copyright (c) 2009-2026 Brant Burnett and Grey Burnett. All rights reserved."
             VALUE "ProductName", "SnapView"
             VALUE "ProductVersion", VERSION_STRING
         END
@@ -203,6 +203,8 @@ STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "SnapView"
     IDS_FILE_FILTER         "Portable Network Graphics (*.png)\t*.png\tWindows Bitmap (*.bmp)\t*.bmp\tGraphics Interchange Format (*.gif)\t*.gif\tJPEG Picture (*.jpg, *.jpeg)\t*.jpg;*.jpeg\t"
+    IDS_ABOUT_VERSION       "SnapView, Version " VERSION_STRING
+    IDS_ABOUT_COPYRIGHT     "Copyright (c) 2009-2026 Brant Burnett and Grey Burnett. All rights reserved."
     IDC_SNAPVIEW             "SNAPVIEW"
 END
 

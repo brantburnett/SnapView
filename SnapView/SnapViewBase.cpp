@@ -255,6 +255,12 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_INITDIALOG:
+        TCHAR text[256];
+        LoadString(hInst, IDS_ABOUT_VERSION, text, ARRAYSIZE(text));
+        SetDlgItemText(hDlg, IDC_ABOUT_VERSION, text);
+        LoadString(hInst, IDS_ABOUT_COPYRIGHT, text, ARRAYSIZE(text));
+        SetDlgItemText(hDlg, IDC_ABOUT_COPYRIGHT, text);
+
         cx = GetSystemMetrics(SM_CXSCREEN);
         cy = GetSystemMetrics(SM_CYSCREEN);
 

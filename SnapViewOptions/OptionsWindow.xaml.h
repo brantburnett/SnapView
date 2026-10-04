@@ -32,6 +32,7 @@ namespace winrt::SnapViewOptions::implementation
 
     private:
         void ConfigureWindow();
+        void ApplyMinimumSize(double scale);
         void LoadSettings();
 
         void ScheduleSave();
@@ -62,6 +63,8 @@ namespace winrt::SnapViewOptions::implementation
         std::wstring savedQuickSavePath;
 
         Microsoft::UI::Dispatching::DispatcherQueueTimer saveTimer{ nullptr };
+        Microsoft::UI::Windowing::OverlappedPresenter presenter{ nullptr };
+        double minimumSizeScale = 0;
     };
 }
 

@@ -133,10 +133,8 @@ namespace winrt::SnapViewOptions::implementation
         if (icon != NULL)
             appWindow.SetIcon(Microsoft::UI::GetIconIdFromIcon(icon));
 
-        const auto presenter = OverlappedPresenter::Create();
+        presenter = OverlappedPresenter::Create();
         presenter.IsMaximizable(false);
-        presenter.PreferredMinimumWidth(MinimumWindowWidth);
-        presenter.PreferredMinimumHeight(MinimumWindowHeight);
         appWindow.SetPresenter(presenter);
 
         // Open centered on the monitor under the pointer. Move there first so
@@ -149,6 +147,25 @@ namespace winrt::SnapViewOptions::implementation
 
         const HWND hwnd = Microsoft::UI::GetWindowFromWindowId(appWindow.Id());
         const double scale = GetDpiForWindow(hwnd) / 96.0;
+        ApplyMinimumSize(scale);
+
+        // The presenter's minimum size is in physical pixels, so rescale it
+        // when the window moves to a monitor with a different DPI.
+        RootGrid().Loaded([weak = get_weak()](const IInspectable&, const RoutedEventArgs&)
+        {
+            auto self = weak.get();
+            if (!self)
+                return;
+
+            const auto xamlRoot = self->RootGrid().XamlRoot();
+            self->ApplyMinimumSize(xamlRoot.RasterizationScale());
+            xamlRoot.Changed([weak](const Microsoft::UI::Xaml::XamlRoot& sender, const Microsoft::UI::Xaml::XamlRootChangedEventArgs&)
+            {
+                if (auto self = weak.get())
+                    self->ApplyMinimumSize(sender.RasterizationScale());
+            });
+        });
+
         const int width = (std::min)(static_cast<int>(WindowWidth * scale), workArea.Width);
         const int height = (std::min)(static_cast<int>(WindowHeight * scale), workArea.Height);
         appWindow.MoveAndResize({
@@ -156,6 +173,16 @@ namespace winrt::SnapViewOptions::implementation
             workArea.Y + (workArea.Height - height) / 2,
             width,
             height });
+    }
+
+    void OptionsWindow::ApplyMinimumSize(double scale)
+    {
+        if (scale <= 0 || scale == minimumSizeScale)
+            return;
+
+        minimumSizeScale = scale;
+        presenter.PreferredMinimumWidth(static_cast<int32_t>(std::ceil(MinimumWindowWidth * scale)));
+        presenter.PreferredMinimumHeight(static_cast<int32_t>(std::ceil(MinimumWindowHeight * scale)));
     }
 
     void OptionsWindow::LoadSettings()

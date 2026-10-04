@@ -143,13 +143,14 @@ namespace
         }
 
         SIZE_T attributeListSize = 0;
-        InitializeProcThreadAttributeList(NULL, 1, 0, &attributeListSize);
+        InitializeProcThreadAttributeList(NULL, 2, 0, &attributeListSize);
         std::vector<BYTE> attributeListBuffer(attributeListSize);
         auto attributeList = reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(attributeListBuffer.data());
 
         bool started = false;
-        if (InitializeProcThreadAttributeList(attributeList, 1, 0, &attributeListSize))
+        if (InitializeProcThreadAttributeList(attributeList, 2, 0, &attributeListSize))
         {
+            DWORD desktopAppPolicy = PROCESS_CREATION_DESKTOP_APP_BREAKAWAY_OVERRIDE;
             if (UpdateProcThreadAttribute(
                 attributeList,
                 0,
@@ -157,7 +158,15 @@ namespace
                 &parentHandle,
                 sizeof(parentHandle),
                 NULL,
-                NULL))
+                NULL) &&
+                UpdateProcThreadAttribute(
+                    attributeList,
+                    0,
+                    PROC_THREAD_ATTRIBUTE_DESKTOP_APP_POLICY,
+                    &desktopAppPolicy,
+                    sizeof(desktopAppPolicy),
+                    NULL,
+                    NULL))
             {
                 std::wstring commandLine = L"\"" + path + L"\" --parent " +
                     std::to_wstring(reinterpret_cast<ULONG_PTR>(parentHandle));

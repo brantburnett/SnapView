@@ -6,6 +6,7 @@
 #include "SnapViewBase.h"
 #include "CaptureBox.h"
 #include "Options.h"
+#include "OptionsProcess.h"
 #include "Share.h"
 #include "SnapHook.h"
 #include "SizeMarks.h"
@@ -120,6 +121,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     InitSizeMarks(hInstance);
 
     LoadOptions();
+    SetHistoryCapacity(options.maxHistory);
 
     // Perform application initialization:
     hWndApp = InitInstance (hInstance, nCmdShow);
@@ -164,7 +166,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     SnapHookSetHooks();
 
     if (!startupTaskActivation)
-        ShowOptions();
+        LaunchOrActivateOptions();
 
     // Main message loop:
     while (GetMessage(&msg, NULL, 0, 0))

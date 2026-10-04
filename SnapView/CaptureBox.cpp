@@ -24,6 +24,7 @@ TCHAR szCaptureBoxWindowClass[MAX_LOADSTRING];			// the main window class name
 TCHAR szSaveFilter[MAX_FILTERSTRING];
 PCAPTUREBOXCLOSEINFO prevCaptureBox[MAX_CAPTURE_HISTORY];
 int savedCaptureBoxes = 0;
+int historyCapacity = 0;
 PCAPTUREBOXWINDOW openCaptureBoxes = NULL;
 std::vector<std::wstring> dragDropFiles;
 
@@ -480,6 +481,7 @@ HWND ReopenPrevCaptureBox() {
 
     delete p;
     savedCaptureBoxes--;
+    prevCaptureBox[savedCaptureBoxes] = NULL;
 
     return hWnd;
 }
@@ -521,21 +523,47 @@ void HideAllCaptureBoxes(bool forDialog)
     }
 }
 
+void DeleteSavedCaptureBox(PCAPTUREBOXCLOSEINFO p)
+{
+    if (p)
+    {
+        delete p->info->bitmap;
+        delete p->info;
+        delete p;
+    }
+}
+
+void SetHistoryCapacity(int capacity)
+{
+    if (capacity < 0)
+        capacity = 0;
+    else if (capacity > MAX_CAPTURE_HISTORY)
+        capacity = MAX_CAPTURE_HISTORY;
+
+    historyCapacity = capacity;
+}
+
+int GetHistoryCapacity()
+{
+    return historyCapacity;
+}
+
 void SaveCaptureBox(PCAPTUREBOXCLOSEINFO info)
 {
-    if (savedCaptureBoxes == options.maxHistory)
+    if (historyCapacity <= 0)
     {
-        PCAPTUREBOXCLOSEINFO p = prevCaptureBox[0];
-        if (p)
-        {
-            delete p->info->bitmap;
-            delete p->info;
-            delete p;
-        }
+        DeleteSavedCaptureBox(info);
+        return;
+    }
 
-        for (int i=0; i<options.maxHistory-1; i++)
+    while (savedCaptureBoxes >= historyCapacity)
+    {
+        DeleteSavedCaptureBox(prevCaptureBox[0]);
+
+        for (int i=0; i<savedCaptureBoxes-1; i++)
             prevCaptureBox[i] = prevCaptureBox[i+1];
         savedCaptureBoxes--;
+        prevCaptureBox[savedCaptureBoxes] = NULL;
     }
 
     prevCaptureBox[savedCaptureBoxes] = info;
@@ -546,13 +574,8 @@ void ClearCaptureHistory()
 {
     for (int i=0; i<savedCaptureBoxes; i++)
     {
-        PCAPTUREBOXCLOSEINFO p = prevCaptureBox[i];
-        if (p)
-        {
-            delete p->info->bitmap;
-            delete p->info;
-            delete p;
-        }
+        DeleteSavedCaptureBox(prevCaptureBox[i]);
+        prevCaptureBox[i] = NULL;
     }
 
     savedCaptureBoxes = 0;
@@ -560,25 +583,20 @@ void ClearCaptureHistory()
 
 void TrimCaptureHistory(int maxHistory)
 {
-    if (maxHistory == 0)
+    if (maxHistory <= 0)
         ClearCaptureHistory();
     else if (maxHistory < savedCaptureBoxes)
     {
         int diff = savedCaptureBoxes - maxHistory;
 
         for (int i=0; i<diff; i++)
-        {
-            PCAPTUREBOXCLOSEINFO p = prevCaptureBox[i];
-            if (p)
-            {
-                delete p->info->bitmap;
-                delete p->info;
-                delete p;
-            }
-        }
+            DeleteSavedCaptureBox(prevCaptureBox[i]);
 
         for (int i=0; i<savedCaptureBoxes-diff; i++)
             prevCaptureBox[i] = prevCaptureBox[i + diff];
+
+        for (int i=savedCaptureBoxes-diff; i<savedCaptureBoxes; i++)
+            prevCaptureBox[i] = NULL;
 
         savedCaptureBoxes = maxHistory;
     }

@@ -1,63 +1,64 @@
 #include "stdafx.h"
 #include "ActivationIpc.h"
 #include "SnapViewBase.h"
+#include "ActivationPipe.h"
 
 namespace
 {
-    constexpr wchar_t ActivationPipeName[] = L"\\\\.\\pipe\\SnapView-cb2d15e2-d0f2-4ecd-892f-3177231b33b9";
-    constexpr char ShowOptionsCommand[] = "show-options";
-
     HANDLE activationThread = NULL;
     volatile LONG activationIpcStopping = FALSE;
+    volatile LONG optionsProcessId = 0;
     HWND activationTargetWindow = NULL;
+    std::wstring activationPipeName;
 
-    bool SendCommand(DWORD timeout)
+    bool IsStopping()
     {
-        if (!WaitNamedPipe(ActivationPipeName, timeout))
-            return false;
+        return InterlockedCompareExchange(&activationIpcStopping, FALSE, FALSE) != FALSE;
+    }
 
-        HANDLE pipe = CreateFile(
-            ActivationPipeName,
-            GENERIC_WRITE,
-            0,
-            NULL,
-            OPEN_EXISTING,
-            0,
-            NULL);
-        if (pipe == INVALID_HANDLE_VALUE)
-            return false;
+    bool IsOptionsProcess(HANDLE pipe)
+    {
+        const LONG expectedProcessId = InterlockedCompareExchange(&optionsProcessId, 0, 0);
+        ULONG clientProcessId = 0;
+        return expectedProcessId != 0 &&
+            GetNamedPipeClientProcessId(pipe, &clientProcessId) &&
+            clientProcessId == static_cast<ULONG>(expectedProcessId);
+    }
 
-        ULONG serverProcessId = 0;
-        if (!GetNamedPipeServerProcessId(pipe, &serverProcessId) ||
-            !AllowSetForegroundWindow(serverProcessId))
+    void DispatchCommand(HANDLE pipe, const char* buffer, DWORD length)
+    {
+        switch (ActivationPipe::ParseCommand(buffer, length))
         {
-            CloseHandle(pipe);
-            return false;
+        case ActivationPipe::Command::ShowOptions:
+            PostMessage(activationTargetWindow, WM_SHOW_OPTIONS, 0, 0);
+            break;
+
+        case ActivationPipe::Command::SettingsChanged:
+            if (IsOptionsProcess(pipe))
+                PostMessage(activationTargetWindow, WM_SETTINGS_CHANGED, 0, 0);
+            break;
+
+        case ActivationPipe::Command::ClearHistory:
+            if (IsOptionsProcess(pipe))
+                PostMessage(activationTargetWindow, WM_CLEAR_HISTORY, 0, 0);
+            break;
+
+        default:
+            break;
         }
-
-        DWORD bytesWritten = 0;
-        const BOOL succeeded = WriteFile(
-            pipe,
-            ShowOptionsCommand,
-            sizeof(ShowOptionsCommand) - 1,
-            &bytesWritten,
-            NULL);
-        CloseHandle(pipe);
-
-        return succeeded && bytesWritten == sizeof(ShowOptionsCommand) - 1;
     }
 
     DWORD WINAPI ActivationIpcThreadProc(LPVOID)
     {
-        while (InterlockedCompareExchange(&activationIpcStopping, FALSE, FALSE) == FALSE)
+        while (!IsStopping())
         {
             HANDLE pipe = CreateNamedPipe(
-                ActivationPipeName,
+                activationPipeName.c_str(),
                 PIPE_ACCESS_INBOUND,
-                PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
+                PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT | PIPE_REJECT_REMOTE_CLIENTS,
                 1,
                 0,
-                sizeof(ShowOptionsCommand),
+                ActivationPipe::MaxCommandBuffer,
                 0,
                 NULL);
             if (pipe == INVALID_HANDLE_VALUE)
@@ -77,16 +78,13 @@ namespace
 
             if (connected)
             {
-                char command[sizeof(ShowOptionsCommand)] = {};
+                // A message longer than the buffer fails with ERROR_MORE_DATA
+                // and is dropped.
+                char command[ActivationPipe::MaxCommandBuffer] = {};
                 DWORD bytesRead = 0;
                 const BOOL received = ReadFile(pipe, command, sizeof(command), &bytesRead, NULL);
-                if (received &&
-                    bytesRead == sizeof(ShowOptionsCommand) - 1 &&
-                    memcmp(command, ShowOptionsCommand, bytesRead) == 0 &&
-                    InterlockedCompareExchange(&activationIpcStopping, FALSE, FALSE) == FALSE)
-                {
-                    PostMessage(activationTargetWindow, WM_SHOW_OPTIONS, 0, 0);
-                }
+                if (received && !IsStopping())
+                    DispatchCommand(pipe, command, bytesRead);
 
                 DisconnectNamedPipe(pipe);
             }
@@ -103,6 +101,7 @@ bool StartActivationIpc(HWND targetWindow)
     if (activationThread != NULL)
         return true;
 
+    activationPipeName = ActivationPipe::GetPipeName();
     activationTargetWindow = targetWindow;
     InterlockedExchange(&activationIpcStopping, FALSE);
     activationThread = CreateThread(NULL, 0, ActivationIpcThreadProc, NULL, 0, NULL);
@@ -122,11 +121,16 @@ void StopActivationIpc()
 
     InterlockedExchange(&activationIpcStopping, TRUE);
     CancelSynchronousIo(activationThread);
-    SendCommand(100);
+    ActivationPipe::SendCommand(ActivationPipe::ShowOptionsCommand, 100, false);
     WaitForSingleObject(activationThread, INFINITE);
     CloseHandle(activationThread);
     activationThread = NULL;
     activationTargetWindow = NULL;
+}
+
+void SetActivationOptionsProcessId(DWORD processId)
+{
+    InterlockedExchange(&optionsProcessId, static_cast<LONG>(processId));
 }
 
 bool RequestShowOptionsFromRunningInstance()
@@ -134,7 +138,7 @@ bool RequestShowOptionsFromRunningInstance()
     const ULONGLONG deadline = GetTickCount64() + 2000;
     do
     {
-        if (SendCommand(100))
+        if (ActivationPipe::SendCommand(ActivationPipe::ShowOptionsCommand, 100, true))
             return true;
 
         Sleep(50);

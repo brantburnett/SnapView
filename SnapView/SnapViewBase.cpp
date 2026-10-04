@@ -2,7 +2,7 @@
 #include "SnapViewBase.h"
 #include "SnapView.h"
 #include "CaptureBox.h"
-#include "Options.h"
+#include "OptionsProcess.h"
 #include <initguid.h>
 
 #define MAX_LOADSTRING 100
@@ -183,19 +183,6 @@ HWND CreateBaseWindow()
     return hWnd;
 }
 
-void ShowOptions()
-{
-    if (hForeWindow != NULL)
-    {
-        SetForegroundWindow(hForeWindow);
-        return;
-    }
-
-    HideAllCaptureBoxes(true);
-    ShowOptionsDialog(hWndApp);
-    ShowAllCaptureBoxes();
-}
-
 LRESULT CALLBACK BaseWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int wmId, wmEvent;
@@ -212,7 +199,7 @@ LRESULT CALLBACK BaseWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
         case IDM_OPTIONS:
-            ShowOptions();
+            LaunchOrActivateOptions();
             break;
         case IDM_EXIT:
             DestroyWindow(hWnd);
@@ -234,9 +221,19 @@ LRESULT CALLBACK BaseWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
         ParseNotifyIconCommand(hWnd, wParam, lParam);
         break;
     case WM_SHOW_OPTIONS:
-        ShowOptions();
+        LaunchOrActivateOptions();
+        break;
+    case WM_SETTINGS_CHANGED:
+        OnOptionsSettingsChanged();
+        break;
+    case WM_CLEAR_HISTORY:
+        ClearCaptureHistory();
+        break;
+    case WM_OPTIONS_CLOSED:
+        OnOptionsProcessExited(static_cast<DWORD>(wParam));
         break;
     case WM_DESTROY:
+        CloseOptionsForExit();
         RemoveTrayIcon(hWnd);
         PostQuitMessage(0);
         break;

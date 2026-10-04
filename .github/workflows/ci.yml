@@ -72,6 +72,10 @@ jobs:
         shell: pwsh
         run: msbuild SnapView\SnapView.vcxproj /restore /m /p:Configuration=Release /p:Platform=${{ matrix.platform }} "/p:SolutionDir=${{ github.workspace }}\" "/p:Version=${{ needs.prepare.outputs.version }}"
 
+      - name: Build Options executable
+        shell: pwsh
+        run: msbuild SnapViewOptions\SnapViewOptions.vcxproj /restore /m /p:Configuration=Release /p:Platform=${{ matrix.platform }} "/p:SolutionDir=${{ github.workspace }}\" "/p:Version=${{ needs.prepare.outputs.version }}"
+
       - name: Build unsigned MSIX package
         shell: pwsh
         env:

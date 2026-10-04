@@ -23,6 +23,8 @@ runs:
           artifacts\bin\SnapView\release-*\*.dll
           artifacts\bin\SnapView\release-*\*.pri
           artifacts\bin\SnapView\release-*\*.winmd
+          artifacts\bin\SnapViewOptions\release-*\SnapViewOptions.exe
+          artifacts\bin\SnapViewOptions\release-*\SnapViewOptions.pri
         if-no-files-found: error
 
     - name: Archive MSIX package

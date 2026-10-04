@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="SnapViewOptions.OptionsWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="SnapView Options">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid x:Name="RootGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TitleBar x:Name="AppTitleBar" Title="SnapView Options" />
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel MaxWidth="1000" Padding="24,0,24,24" Spacing="4">
+                <InfoBar
+                    x:Name="StatusInfoBar"
+                    Margin="0,8,0,0"
+                    IsOpen="False" />
+
+                <!-- Snaps -->
+                <TextBlock
+                    Margin="1,8,0,8"
+                    Style="{StaticResource SettingsSectionHeaderStyle}"
+                    Text="Snaps" />
+
+                <Border Style="{StaticResource SettingsCardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <FontIcon Glyph="&#xE81C;" Style="{StaticResource SettingsCardIconStyle}" />
+                        <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource SettingsCardHeaderStyle}" Text="Snaps to keep in history" />
+                            <TextBlock Style="{StaticResource SettingsCardDescriptionStyle}" Text="Closed snaps you can reopen with Ctrl+Shift+PrtScr. Set to 0 to keep none. Extra snaps are removed when you close Options." />
+                        </StackPanel>
+                        <NumberBox
+                            x:Name="MaxHistoryBox"
+                            Grid.Column="2"
+                            MinWidth="120"
+                            VerticalAlignment="Center"
+                            AccessKey="H"
+                            AutomationProperties.Name="Snaps to keep in history"
+                            LargeChange="5"
+                            Maximum="20"
+                            Minimum="0"
+                            SmallChange="1"
+                            SpinButtonPlacementMode="Inline"
+                            ValidationMode="InvalidInputOverwritten"
+                            ValueChanged="MaxHistoryBox_ValueChanged" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SettingsCardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <FontIcon Glyph="&#xE74D;" Style="{StaticResource SettingsCardIconStyle}" />
+                        <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource SettingsCardHeaderStyle}" Text="Clear history" />
+                            <TextBlock Style="{StaticResource SettingsCardDescriptionStyle}" Text="Remove all closed snaps from history." />
+                        </StackPanel>
+                        <Button
+                            x:Name="ClearHistoryButton"
+                            Grid.Column="2"
+                            MinWidth="120"
+                            VerticalAlignment="Center"
+                            AccessKey="C"
+                            Content="Clear history">
+                            <Button.Flyout>
+                                <Flyout x:Name="ClearHistoryFlyout" Placement="Bottom">
+                                    <StackPanel MaxWidth="280" Spacing="12">
+                                        <TextBlock
+                                            Style="{StaticResource BodyStrongTextBlockStyle}"
+                                            Text="Clear snap history?" />
+                                        <TextBlock
+                                            Text="Closed snaps in history will be removed. Open snaps are not affected."
+                                            TextWrapping="Wrap" />
+                                        <Button
+                                            HorizontalAlignment="Right"
+                                            Click="ConfirmClearHistory_Click"
+                                            Content="Clear history"
+                                            Style="{StaticResource AccentButtonStyle}" />
+                                    </StackPanel>
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+                    </Grid>
+                </Border>
+
+
+                <Border Style="{StaticResource SettingsCardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <FontIcon Glyph="&#xED1A;" Style="{StaticResource SettingsCardIconStyle}" />
+                        <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource SettingsCardHeaderStyle}" Text="Hide snaps while taking a new snap" />
+                            <TextBlock Style="{StaticResource SettingsCardDescriptionStyle}" Text="Open snaps are hidden so they don't appear in the new capture." />
+                        </StackPanel>
+                        <ToggleSwitch
+                            x:Name="HideOnNewSnapToggle"
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            AccessKey="N"
+                            AutomationProperties.Name="Hide snaps while taking a new snap"
+                            Style="{StaticResource SettingsCardToggleStyle}"
+                            Toggled="HideOnNewSnapToggle_Toggled" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SettingsCardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <FontIcon Glyph="&#xE946;" Style="{StaticResource SettingsCardIconStyle}" />
+                        <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource SettingsCardHeaderStyle}" Text="Show hover information" />
+                            <TextBlock Style="{StaticResource SettingsCardDescriptionStyle}" Text="Show the frame and close button when the pointer is over a snap." />
+                        </StackPanel>
+                        <ToggleSwitch
+                            x:Name="ShowHoverInfoToggle"
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            AccessKey="I"
+                            AutomationProperties.Name="Show hover information"
+                            Style="{StaticResource SettingsCardToggleStyle}"
+                            Toggled="ShowHoverInfoToggle_Toggled" />
+                    </Grid>
+                </Border>
+
+                <!-- Saving -->
+                <TextBlock Style="{StaticResource SettingsSectionHeaderStyle}" Text="Saving" />
+
+                <Border Style="{StaticResource SettingsCardStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <FontIcon Glyph="&#xEB9F;" Style="{StaticResource SettingsCardIconStyle}" />
+                        <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource SettingsCardHeaderStyle}" Text="Default snap type" />
+                            <TextBlock Style="{StaticResource SettingsCardDescriptionStyle}" Text="File format for Quicksave and drag and drop, and the default for Save As." />
+                        </StackPanel>
+                        <ComboBox
+                            x:Name="DefaultSaveTypeBox"
+                            Grid.Column="2"
+                            MinWidth="200"
+                            VerticalAlignment="Center"
+                            AccessKey="T"
+                            AutomationProperties.Name="Default snap type"
+                            SelectionChanged="DefaultSaveTypeBox_SelectionChanged">
+                            <ComboBoxItem Content="PNG" />
+                            <ComboBoxItem Content="Bitmap (BMP)" />
+                            <ComboBoxItem Content="GIF" />
+                            <ComboBoxItem Content="JPEG" />
+                        </ComboBox>
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource SettingsCardStyle}">
+                    <Grid RowSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <FontIcon Glyph="&#xE8B7;" Style="{StaticResource SettingsCardIconStyle}" />
+                        <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource SettingsCardHeaderStyle}" Text="Quick save folder" />
+                            <TextBlock Style="{StaticResource SettingsCardDescriptionStyle}" Text="Where Quicksave puts snaps. Leave empty to use your Pictures folder." />
+                        </StackPanel>
+                        <Button
+                            x:Name="BrowseButton"
+                            Grid.Column="2"
+                            MinWidth="120"
+                            VerticalAlignment="Center"
+                            AccessKey="B"
+                            Click="BrowseButton_Click"
+                            Content="Browse..." />
+                        <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Spacing="4">
+                            <TextBox
+                                x:Name="QuickSavePathBox"
+                                AccessKey="F"
+                                AutomationProperties.Name="Quick save folder"
+                                IsSpellCheckEnabled="False"
+                                MaxLength="227"
+                                TextChanged="QuickSavePathBox_TextChanged" />
+                            <TextBlock
+                                x:Name="QuickSavePathError"
+                                Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="This folder doesn't exist. Your last valid folder is still in use."
+                                TextWrapping="Wrap"
+                                Visibility="Collapsed" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Startup -->
+                <TextBlock Style="{StaticResource SettingsSectionHeaderStyle}" Text="Startup" />
+
+                <Border Style="{StaticResource SettingsCardStyle}">
+                    <Grid RowSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <FontIcon Glyph="&#xE7E8;" Style="{StaticResource SettingsCardIconStyle}" />
+                        <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource SettingsCardHeaderStyle}" Text="Launch at startup" />
+                            <TextBlock
+                                x:Name="StartupStatusText"
+                                Style="{StaticResource SettingsCardDescriptionStyle}"
+                                Text="Checking startup setting..." />
+                        </StackPanel>
+                        <ToggleSwitch
+                            x:Name="StartupToggle"
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            AccessKey="S"
+                            AutomationProperties.Name="Launch at startup"
+                            IsEnabled="False"
+                            Style="{StaticResource SettingsCardToggleStyle}"
+                            Toggled="StartupToggle_Toggled" />
+                        <InfoBar
+                            x:Name="StartupInfoBar"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                            IsClosable="False"
+                            IsOpen="False">
+                            <InfoBar.ActionButton>
+                                <HyperlinkButton
+                                    x:Name="StartupSettingsLink"
+                                    Click="StartupSettingsLink_Click"
+                                    Content="Open Startup apps settings" />
+                            </InfoBar.ActionButton>
+                        </InfoBar>
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border
+            Grid.Row="2"
+            Padding="24,16"
+            Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="0,1,0,0">
+            <Button
+                x:Name="CloseButton"
+                MinWidth="120"
+                HorizontalAlignment="Right"
+                Click="CloseButton_Click"
+                Content="Close"
+                Style="{StaticResource AccentButtonStyle}">
+                <Button.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="Escape" />
+                </Button.KeyboardAccelerators>
+            </Button>
+        </Border>
+    </Grid>
+</Window>

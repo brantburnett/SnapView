@@ -64,6 +64,8 @@ void ShowAllCaptureBoxes();
 void HideAllCaptureBoxes(bool forDialog = false);
 void ClearCaptureHistory();
 void TrimCaptureHistory(int maxHistory);
+void SetHistoryCapacity(int capacity);
+int GetHistoryCapacity();
 void QuickSaveCaptureBox(HWND hWnd);
 bool ProcessMouseWheel(POINT pt, short wheelDelta);
 

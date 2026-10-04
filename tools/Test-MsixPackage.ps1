@@ -22,6 +22,12 @@ try {
         throw "Package '$packagePath' does not contain AppxManifest.xml."
     }
 
+    foreach ($requiredFile in 'SnapView.exe', 'SnapViewOptions.exe', 'SnapViewOptions.pri') {
+        if ($null -eq $archive.GetEntry($requiredFile)) {
+            throw "Package '$packagePath' does not contain $requiredFile."
+        }
+    }
+
     $reader = [System.IO.StreamReader]::new($manifestEntry.Open())
     try {
         [xml]$manifest = $reader.ReadToEnd()

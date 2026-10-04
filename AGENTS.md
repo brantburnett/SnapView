@@ -6,17 +6,44 @@ SnapView is a native Windows desktop screenshot utility. The application is a
 Unicode Win32 C++ project; its installer is an MSIX packaging project. The solution is
 `SnapView.slnx`, with these projects:
 
-- `SnapView\SnapView.vcxproj`: application (`Debug|x64`, `Release|x64`,
-  `Debug|ARM64`, and `Release|ARM64`)
+- `SnapView\SnapView.vcxproj`: GDI tray and capture application (`Debug|x64`,
+  `Release|x64`, `Debug|ARM64`, and `Release|ARM64`)
+- `SnapViewOptions\SnapViewOptions.vcxproj`: C++/WinRT WinUI 3 Options window,
+  `SnapViewOptions.exe` (same configurations)
 - `SnapViewPackage\SnapViewPackage.wapproj`: MSIX package, built as part of the
   solution
 
-The native project uses the `v145` toolset and the Windows App SDK. Per-user
+Both native projects use the `v145` toolset and the Windows App SDK. Per-user
 settings are stored in the MSIX package's `ApplicationData.LocalSettings`
 store. Visual Studio debugging launches the `SnapViewPackage` project, which
 builds, deploys, and starts SnapView with package identity.
-The package project rebuilds SnapView before staging its payload so the
-debugger never launches an outdated executable.
+The package project rebuilds both executables before staging its payload so
+the debugger never launches an outdated executable.
+
+### Options window architecture
+
+The Options window runs in its own process. Do not host XAML (WinUI windows or
+XAML islands) in `SnapView.exe`: its main thread runs a classic Win32 message
+loop and owns the low-level keyboard and mouse hooks.
+
+- `SnapView.exe` launches `SnapViewOptions.exe` from its own directory
+  (`SnapView\OptionsProcess.cpp`), passing an inheritable handle to itself as
+  `--parent <handle>`. Options closes itself when that process exits.
+- `SnapViewOptions.exe` uses the standard `Application::Start` model. It
+  inherits package identity, so it reads and writes `LocalSettings` and the
+  `StartupTask` directly. Each setting is saved as it changes.
+- After a save, Options sends `settings-changed` over the activation pipe
+  (`Shared\ActivationPipe.h`); clearing history sends `clear-history`. The
+  tray accepts those commands only from the Options process it launched.
+  When Options exits, the tray reloads settings and trims snap history.
+- Setting keys, defaults, and validation live in `Shared\SnapViewSettings.h`,
+  which both projects include.
+- The package's `resources.pri` does not index the Options XAML. Compiled XAML
+  is embedded in `SnapViewOptions.pri`, which `App` loads through
+  `Application.ResourceManagerRequested`.
+- `SnapViewOptions.exe` runs only inside the package. To debug it, start the
+  package and attach the debugger to `SnapViewOptions.exe` after opening
+  Options.
 
 SnapView remains framework-dependent for the Windows App SDK. The package
 project declares the framework package dependency. The native project disables
@@ -59,8 +86,10 @@ msbuild SnapView.slnx /restore /m /p:Configuration=Release /p:Platform=ARM64
 
 The application is emitted to
 `artifacts\bin\SnapView\<configuration>-<architecture>\SnapView.exe` (for
-example, `artifacts\bin\SnapView\release-arm64\SnapView.exe`). The solution
-build also produces an architecture-specific MSIX under
+example, `artifacts\bin\SnapView\release-arm64\SnapView.exe`). The Options
+window is emitted to
+`artifacts\bin\SnapViewOptions\<configuration>-<architecture>\SnapViewOptions.exe`
+with `SnapViewOptions.pri` beside it. The solution build also produces an architecture-specific MSIX under
 `artifacts\publish\<configuration>\`. Build both architectures, then create a
 bundle with:
 
@@ -132,10 +161,15 @@ or installer content.
 - Add C++ source, headers, resources, and images to
   `SnapView\SnapView.vcxproj` and keep `SnapView\SnapView.vcxproj.filters` in
   sync for Visual Studio users.
-- `stdafx.cpp` creates the precompiled header. Files using shared Windows or
-  C++/WinRT headers should include `stdafx.h` first.
-- Preserve the project runtime-library selection: `/MTd` for Debug and `/MT`
-  for Release.
+- Add Options source, XAML, and IDL files to
+  `SnapViewOptions\SnapViewOptions.vcxproj` and its `.filters` file. Code
+  shared by both executables goes in header-only files under `Shared\`.
+- `stdafx.cpp` creates the SnapView precompiled header and `pch.cpp` creates
+  the SnapViewOptions one. Include the project's precompiled header first.
+- Preserve the runtime-library selection in both projects: `/MTd` for Debug
+  and `/MT` for Release.
+- In SnapViewOptions, never block the UI thread on asynchronous WinRT calls
+  (no `.get()`); use `co_await`.
 - Update `SnapViewPackage\Package.appxmanifest` and
   `SnapViewPackage\SnapViewPackage.wapproj` when package identity, installable
   files, or installer behavior changes. Do not hand-edit generated build

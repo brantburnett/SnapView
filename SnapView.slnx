@@ -4,7 +4,9 @@
     <Platform Name="x64" />
   </Configurations>
   <Project Path="SnapView/SnapView.vcxproj" Id="c6b6706f-6e7e-412a-abea-e4dc4f10d86a" />
+  <Project Path="SnapViewOptions/SnapViewOptions.vcxproj" Id="8fe075d3-ecd6-4480-b395-43b966dca674" />
   <Project Path="SnapViewPackage/SnapViewPackage.wapproj" Type="C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5" DefaultStartup="true">
+    <BuildDependency Project="SnapViewOptions/SnapViewOptions.vcxproj" />
     <Build />
   </Project>
 </Solution>

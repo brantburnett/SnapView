@@ -201,6 +201,7 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalOptions>/await:strict %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..\Shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -218,6 +219,7 @@
     <ClCompile Include="CaptureBox.cpp" />
     <ClCompile Include="Share.cpp" />
     <ClCompile Include="Options.cpp" />
+    <ClCompile Include="OptionsProcess.cpp" />
     <ClCompile Include="SizeMarks.cpp" />
     <ClCompile Include="SnapView.cpp" />
     <ClCompile Include="SnapViewBase.cpp" />
@@ -235,6 +237,9 @@
     <ClInclude Include="Share.h" />
     <ClInclude Include="LimitSingleInstance.h" />
     <ClInclude Include="Options.h" />
+    <ClInclude Include="OptionsProcess.h" />
+    <ClInclude Include="..\Shared\ActivationPipe.h" />
+    <ClInclude Include="..\Shared\SnapViewSettings.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SizeMarks.h" />
     <ClInclude Include="SnapView.h" />

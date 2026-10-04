@@ -1,0 +1,8 @@
+namespace SnapViewOptions
+{
+    [default_interface]
+    runtimeclass OptionsWindow : Microsoft.UI.Xaml.Window
+    {
+        OptionsWindow(UInt32 parentProcessId);
+    }
+}

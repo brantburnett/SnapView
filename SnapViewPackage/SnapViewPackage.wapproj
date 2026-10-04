@@ -42,6 +42,7 @@
     <IntermediateOutputPath>$(ArtifactsObjPath)</IntermediateOutputPath>
     <EntryPointExe>SnapView.exe</EntryPointExe>
     <SnapViewOutputDirectory>$(MSBuildThisFileDirectory)..\artifacts\bin\SnapView\$(ArtifactConfigurationPlatform)\</SnapViewOutputDirectory>
+    <SnapViewOptionsOutputDirectory>$(MSBuildThisFileDirectory)..\artifacts\bin\SnapViewOptions\$(ArtifactConfigurationPlatform)\</SnapViewOptionsOutputDirectory>
     <EntryPointProjectUniqueName>..\SnapView\SnapView.vcxproj</EntryPointProjectUniqueName>
   </PropertyGroup>
   <ItemGroup>
@@ -82,14 +83,14 @@
   </Target>
   <Target Name="BuildSnapViewPayload" BeforeTargets="IncludeSnapViewPayload">
     <MSBuild
-      Projects="..\SnapView\SnapView.vcxproj"
+      Projects="..\SnapView\SnapView.vcxproj;..\SnapViewOptions\SnapViewOptions.vcxproj"
       Targets="Build"
       Properties="Configuration=$(Configuration);Platform=$(Platform)" />
   </Target>
   <Target Name="CopySnapViewPayloadForDebug" AfterTargets="_CopyPackageFiles">
     <Copy
-      SourceFiles="$(SnapViewOutputDirectory)SnapView.exe"
-      DestinationFiles="$(OutputPath)AppX\SnapView.exe"
+      SourceFiles="$(SnapViewOutputDirectory)SnapView.exe;$(SnapViewOptionsOutputDirectory)SnapViewOptions.exe;$(SnapViewOptionsOutputDirectory)SnapViewOptions.pri"
+      DestinationFolder="$(OutputPath)AppX\"
       SkipUnchangedFiles="true" />
   </Target>
   <Target Name="IncludeSnapViewPayload" BeforeTargets="_ConvertItems">
@@ -98,6 +99,12 @@
       <_FilteredNonWapProjProjectOutput Include="$(SnapViewOutputDirectory)*.dll" />
       <_FilteredNonWapProjProjectOutput Include="$(SnapViewOutputDirectory)*.pri" />
       <_FilteredNonWapProjProjectOutput Include="$(SnapViewOutputDirectory)*.winmd" />
+      <!-- The Options window is a separate WinUI 3 process. Its compiled XAML is embedded in SnapViewOptions.pri. -->
+      <_FilteredNonWapProjProjectOutput Include="$(SnapViewOptionsOutputDirectory)SnapViewOptions.exe" />
+      <_FilteredNonWapProjProjectOutput Include="$(SnapViewOptionsOutputDirectory)SnapViewOptions.pri" />
     </ItemGroup>
+    <Error
+      Condition="!Exists('$(SnapViewOptionsOutputDirectory)SnapViewOptions.exe') or !Exists('$(SnapViewOptionsOutputDirectory)SnapViewOptions.pri')"
+      Text="SnapViewOptions.exe and SnapViewOptions.pri were not found in $(SnapViewOptionsOutputDirectory). Build SnapViewOptions\SnapViewOptions.vcxproj before packaging." />
   </Target>
 </Project>

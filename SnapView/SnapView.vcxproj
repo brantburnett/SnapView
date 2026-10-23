@@ -217,6 +217,7 @@
   <ItemGroup>
     <ClCompile Include="ActivationIpc.cpp" />
     <ClCompile Include="CaptureBox.cpp" />
+    <ClCompile Include="MenuIcons.cpp" />
     <ClCompile Include="Share.cpp" />
     <ClCompile Include="Options.cpp" />
     <ClCompile Include="OptionsProcess.cpp" />
@@ -236,6 +237,7 @@
     <ClInclude Include="CaptureBox.h" />
     <ClInclude Include="Share.h" />
     <ClInclude Include="LimitSingleInstance.h" />
+    <ClInclude Include="MenuIcons.h" />
     <ClInclude Include="Options.h" />
     <ClInclude Include="OptionsProcess.h" />
     <ClInclude Include="..\Shared\ActivationPipe.h" />

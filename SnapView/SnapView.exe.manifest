@@ -1,34 +1,54 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-<assemblyIdentity
+  <assemblyIdentity
     version="1.0.0.0"
-    processorArchitecture="amd64"
-    name="SnapView"
+    processorArchitecture="*"
+    name="SnapView.exe"
     type="win32"
-/>
-<description>Your application description here.</description>
-<application xmlns="urn:schemas-microsoft-com:asm.v3">
-    <windowsSettings>
-        <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware>
-        <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2, PerMonitor</dpiAwareness>
-    </windowsSettings>
-</application>
-<dependency>
+  />
+  <description>SnapView - Modern Screenshot Utility</description>
+
+  <!-- Enable Windows visual styles for modern menu appearance -->
+  <dependency>
     <dependentAssembly>
-        <assemblyIdentity
-            type="win32"
-            name="Microsoft.Windows.Common-Controls"
-            version="6.0.0.0"
-            processorArchitecture="amd64"
-            publicKeyToken="6595b64144ccf1df"
-            language="*"
-        />
+      <assemblyIdentity
+        type="win32"
+        name="Microsoft.Windows.Common-Controls"
+        version="6.0.0.0"
+        processorArchitecture="*"
+        publicKeyToken="6595b64144ccf1df"
+        language="*"
+      />
     </dependentAssembly>
-</dependency>
-<compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+  </dependency>
+
+  <!-- Windows Settings for modern appearance -->
+  <asmv3:application xmlns:asmv3="http://schemas.microsoft.com/asm/v3/application">
+    <asmv3:windowsSettings xmlns="http://schemas.microsoft.com/asm/v3/windowsSettings">
+      <dpiAware>true</dpiAware>
+    </asmv3:windowsSettings>
+  </asmv3:application>
+
+  <!-- Request admin privileges if needed -->
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
+    <security>
+      <requestedPrivileges>
+        <requestedExecutionLevel level="asInvoker" uiAccess="false"/>
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+
+  <!-- Compatibility settings -->
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
     <application>
-        <maxversiontested Id="10.0.17763.0"/>
-        <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/>
+      <!-- Windows 10 / 11 compatibility -->
+      <supportedOS Id="{8e0f7a12-bfb4-4fe0-a793-a173a4fb87d6}"/>
+      <!-- Windows 8.1 compatibility -->
+      <supportedOS Id="{1f676c76-80e1-4239-95bb-83d0f6d0da78}"/>
+      <!-- Windows 8 compatibility -->
+      <supportedOS Id="{4a2f28e3-53b9-4441-ba9c-d69d4a4a6e38}"/>
+      <!-- Windows 7 compatibility -->
+      <supportedOS Id="{35138b9a-5d96-4fbd-8e2d-a2440225f93a}"/>
     </application>
-</compatibility>
+  </compatibility>
 </assembly>

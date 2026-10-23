@@ -15,7 +15,8 @@
     <ArtifactPlatform>$([System.String]::Copy('$(Platform)').ToLowerInvariant())</ArtifactPlatform>
     <ArtifactConfigurationPlatform>$(ArtifactConfiguration)-$(ArtifactPlatform)</ArtifactConfigurationPlatform>
     <BaseOutputPath>$(ArtifactsPath)bin\$(MSBuildProjectName)\</BaseOutputPath>
-    <BaseIntermediateOutputPath>$(ArtifactsPath)obj\$(MSBuildProjectName)\$(ArtifactConfigurationPlatform)\</BaseIntermediateOutputPath>
+    <!-- NuGet restore output must not vary by configuration or platform; Visual Studio restores once per project. -->
+    <BaseIntermediateOutputPath>$(ArtifactsPath)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
     <ArtifactsBinPath>$(ArtifactsPath)bin\$(MSBuildProjectName)\$(ArtifactConfigurationPlatform)\</ArtifactsBinPath>
     <ArtifactsObjPath>$(ArtifactsPath)obj\$(MSBuildProjectName)\$(ArtifactConfigurationPlatform)\</ArtifactsObjPath>
     <ArtifactsPublishPath>$(ArtifactsPath)publish\$(ArtifactConfiguration)\</ArtifactsPublishPath>

@@ -21,6 +21,9 @@
     <ClCompile Include="CaptureBox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MenuIcons.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="Share.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -57,6 +60,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="LimitSingleInstance.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MenuIcons.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="OptionsProcess.h">

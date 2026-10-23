@@ -7,6 +7,7 @@
 #include "CaptureBox.h"
 #include "Options.h"
 #include "OptionsProcess.h"
+#include "MenuIcons.h"
 #include "Share.h"
 #include "SnapHook.h"
 #include "SizeMarks.h"
@@ -155,6 +156,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
     hNotifyMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDC_NOTIFYICONMENU));
     hCaptureMenu = LoadMenu(hInst, MAKEINTRESOURCE(IDC_CAPTUREMENU));
+    InitMenuIcons();
+    ApplyMenuIcons(hNotifyMenu);
+    ApplyMenuIcons(hCaptureMenu);
 
     hCursorArrow = LoadCursor(NULL, IDC_ARROW);
     hCursorMove	= LoadCursor(NULL, IDC_SIZEALL);
@@ -179,6 +183,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
     DestroyMenu(hNotifyMenu);
     DestroyMenu(hCaptureMenu);
+    CleanupMenuIcons();
 
     DestroyCursor(hCursorMove);
     DestroyCursor(hCursorNS);

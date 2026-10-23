@@ -101,7 +101,10 @@ powershell -File tools\New-MsixBundle.ps1 ^
 ```
 
 Intermediate files are stored under
-`artifacts\obj\<project>\<configuration>-<architecture>\`. All configuration
+`artifacts\obj\<project>\<configuration>-<architecture>\`. NuGet restore
+output (`project.assets.json` and the `nuget.g` imports) is stored once per
+project in `artifacts\obj\<project>\` because Visual Studio restores each
+project once for all configurations. All configuration
 and architecture path components are lowercase. Local package builds are
 unsigned. The release workflow uploads the unsigned MSIX bundle to Microsoft
 Store, which validates and signs it during submission. Unsigned release
